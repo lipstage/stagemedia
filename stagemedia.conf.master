@@ -1,0 +1,7 @@
+# Turn on the master server
+# Will listen on port 8100 (PCM data receive) and ...
+# 8101 (PCM data send)
+# 8105 (Stats - Not implemented yet)
+
+master=true
+distro_max_clients=20

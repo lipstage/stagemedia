@@ -1,0 +1,60 @@
+
+Port 80 (8055) - DIST MODE ONLY
+ General port used for streaming to clients.  This typically will be in mp3 or flv format depending on URL needs
+
+Port 8100 - MASTER MODE ONLY
+ Accepts AU format (PCM 16-bit mono) audio.  Makes this data available on the outside as well.  
+ 
+Port 8101 - MASTER MODE ONLY
+ Sends SMSD V1 audio/control data once connected as seen below.  DIST or RELAY servers will use this port
+ to establish distributions.
+
+Port 8102 - MASTER MODE ONLY
+ Collects statistical data (not yet implemented)
+
+Port 8105 - MASTER MODE ONLY
+ Command Channel...should you want to inject commands :D
+----
+
+
+Primer (1k)
+
+	The primer is initiated between the server communication points.  The type (audio) is *assumed* in V1 to be
+	PCM 16-bit Mono in Big Endian
+
+4 bytes		MAGIC		SMsD
+1 byte 		VERSION		
+	0: Not used
+	1: Current Standard
+	o: Reserved
++ All other bytes are used for padding to the 1k mark
+
+Datums
+
+	The datums are the individual packet components and may consist of differing types.  Type 1 is just simple Audio, 
+	which means the reader is expected to unpack it, concatenate the packets, and transcode them into appropriate types.
+
+	Type 1 can be used for such things as commercial injections or air shut down.
+bits
+[20, 31]	MAGIC		3982 (number)
+[16, 19]	TYPE
+	0: Not Used
+	1: Data (Audio)
+	2: Control
+	3: Event (Not Implemented)
+	o: Reserved
+
+*** IF TYPE=1 ***
+[0, 15]		SIZE	size of the payload
+
+*** IF TYPE=2 ***
+[0, 15]
+	0: Not Used
+	1: Inject 30 second commercial
+	2: Reserved
+	3: Reserved
+	4: Reserved
+	5: Reserved
+	6: Go "dead" air -- do not process any further PCM data, but continue to receive it.
+	7: Go "alive" air -- If it were previously shut down, begin to process data again.
+	o: Reserved

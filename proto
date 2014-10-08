@@ -1,0 +1,47 @@
+3 bytes SMs
+1 byte Versioning
+	bits 0-3 (Version)
+		0: Not used
+		1: Version 1
+		o: Reserved
+	bits 4-7 (Payload Type)
+		0: Not used
+		1: Audio Data
+		2: Video Data (Unimplemented)
+		3: Control Command
+		o: Reserved
+
+*** FOR PAYLOAD TYPE 1 ONLY ***
+4 bytes options
+	bits 0-3 (Data Stream Format)
+		0: Reserved
+		1: PCM 16-bit (Big Endian) 22050
+		2: MPEG-3 (Unimplemented)
+		3: OGG w/Vorbis (Unimplemented)
+		4: OGG w/Speex (Unimplemented)
+		5: PCM 16-bit (Little Endian) 22050
+		o: Reserved for later use
+	bit 4-7 (Compression Bit)
+		0: No Compression Used
+		1: gzip/deflate compression
+		o: Reserved for later use
+4 Bytes Data Size
+	- Provides the size of the payload in raw bytes
+
+
+*** FOR PAYLOAD TYPE 3 ONLY ***
+4 bytes
+	bits 0-4 (Control Method)
+		0: Not Used
+		1: Commercial 30 Seconds
+		2: Reserved
+		3: Reserved
+		4: Reserved
+		5: Reserved
+		6: Dead Air (Discontinue all audio until further notice)
+		7: Reset all connections
+		o: Reserved
+	* All other bits are reserved for future use
+2 bytes padding 
+	- Should be 0 on control methods
+(TBD)
