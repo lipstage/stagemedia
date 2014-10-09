@@ -1,9 +1,5 @@
 #include "stagemedia.h"
 
-#define	API_SYSTEM_URL		"http://localhost:5001/api/v1/system"
-#define	API_LOGGED_SESSION	"logged_session"
-
-
 typedef struct st_URLData {
 	char	*data;
 	size_t	s;
@@ -72,8 +68,13 @@ int	valid_session(char *sessionid) {
 	json_error_t	error;
 	char	*text;
 	char	url[4096];
-
-	snprintf(url, sizeof url - 1, "%s/%s/%s", API_SYSTEM_URL, API_LOGGED_SESSION, sessionid);
+	
+	/* 
+	 * Moved to a configuration option for the client.
+	 *
+	 * snprintf(url, sizeof url - 1, "%s/%s/%s", API_SYSTEM_URL, API_LOGGED_SESSION, sessionid); 
+ 	 */
+	snprintf(url, sizeof url - 1, "%s/%s/%s", cfg_read_key("api_system_url"), cfg_read_key("api_logged_session"), sessionid);
 	if (!(text = url_fetch(url, NULL)))
 		return -1;
 

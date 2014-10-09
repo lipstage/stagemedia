@@ -4,8 +4,8 @@ int	distro_init(void) {
 	int	pid, serverfd;
 	pthread_t	cleanup, frommaster;
 
-	//if (fork())
-	//	exit(0);
+	if (fork())
+		exit(0);
 
 	/* Ignore the PIPE signal */
 	signal(SIGPIPE, SIG_IGN);
@@ -16,8 +16,8 @@ int	distro_init(void) {
 		exit(-1);
 	}
 
-	//for (;;) {
-	//	if ((pid = fork()) == 0) {
+	for (;;) {
+		if ((pid = fork()) == 0) {
 			/* start pulling data from the master server */
 			pthread_create(&frommaster, NULL, GetFromMaster, NULL);
 
@@ -26,10 +26,10 @@ int	distro_init(void) {
 
 			/* give back the serverfd! */
 			return (serverfd);
-	//	} else if (pid > 0) {
-	//		waitpid(pid, NULL, 0);	
-	//	}
-	//}
+		} else if (pid > 0) {
+			waitpid(pid, NULL, 0);	
+		}
+	}
 	return -1;
 }
 
@@ -102,7 +102,7 @@ void	*ProcessHandler(pThreads s) {
 	short	int	audio[MAX_TRANSCODE_CLIP_SIZE + sizeof(short int)] = { 0 };
 #endif
 	int	method = 0;
-	time_t	st_time = time(0);
+	/* time_t	st_time = time(0); */
 	char	sessionid[1024];
 
 	/* set the connect time, NOW */
