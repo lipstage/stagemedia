@@ -14,7 +14,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <lame/lame.h>
-#include <shout/shout.h>
 #include <curl/curl.h>
 #include <sys/select.h>
 #include <sys/wait.h>
