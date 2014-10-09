@@ -2709,6 +2709,9 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+#
+# To cheat: for i in $(grep 'ac_cv_header_' config.log|awk -F= '{print $1}' ); do echo  'test "$'$i'" == "no" || \'; done; echo ""
+#
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -6654,7 +6657,43 @@ fi
 
 done
 
+if test "$ac_cv_header_arpa_inet_h" == "no" || \
+ test "$ac_cv_header_ctype_h" == "no" || \
+ test "$ac_cv_header_curl_curl_h" == "no" || \
+ test "$ac_cv_header_errno_h" == "no" || \
+ test "$ac_cv_header_fcntl_h" == "no" || \
+ test "$ac_cv_header_inttypes_h" == "no" || \
+ test "$ac_cv_header_jansson_h" == "no" || \
+ test "$ac_cv_header_lame_lame_h" == "no" || \
+ test "$ac_cv_header_math_h" == "no" || \
+ test "$ac_cv_header_memory_h" == "no" || \
+ test "$ac_cv_header_netdb_h" == "no" || \
+ test "$ac_cv_header_netinet_in_h" == "no" || \
+ test "$ac_cv_header_pthread_h" == "no" || \
+ test "$ac_cv_header_signal_h" == "no" || \
+ test "$ac_cv_header_sndfile_h" == "no" || \
+ test "$ac_cv_header_stdc" == "no" || \
+ test "$ac_cv_header_stdint_h" == "no" || \
+ test "$ac_cv_header_stdio_h" == "no" || \
+ test "$ac_cv_header_stdlib_h" == "no" || \
+ test "$ac_cv_header_string_h" == "no" || \
+ test "$ac_cv_header_strings_h" == "no" || \
+ test "$ac_cv_header_sys_select_h" == "no" || \
+ test "$ac_cv_header_sys_socket_h" == "no" || \
+ test "$ac_cv_header_sys_stat_h" == "no" || \
+ test "$ac_cv_header_sys_time_h" == "no" || \
+ test "$ac_cv_header_sys_types_h" == "no" || \
+ test "$ac_cv_header_sys_wait_h" == "no" || \
+ test "$ac_cv_header_unistd_h" == "no" 
+then
+ { { $as_echo "$as_me:$LINENO: error: You are missing one or more required headers -- consider installing devel packages" >&5
+$as_echo "$as_me: error: You are missing one or more required headers -- consider installing devel packages" >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
+#
+# To cheat: for i in $(grep 'ac_cv_lib_' config.log|awk -F= '{print $1}' ); do echo  'test "$'$i'" == "no" || \'; done; echo ""
+#
 
 { $as_echo "$as_me:$LINENO: checking for pthread_mutex_init in -lpthread" >&5
 $as_echo_n "checking for pthread_mutex_init in -lpthread... " >&6; }
@@ -7030,6 +7069,16 @@ _ACEOF
 
 fi
 
+if test "$ac_cv_lib_curl_curl_easy_init" == "no" || \
+ test "$ac_cv_lib_jansson_getpid" == "no" || \
+ test "$ac_cv_lib_m_cos" == "no" || \
+ test "$ac_cv_lib_mp3lame_lame_init" == "no" || \
+ test "$ac_cv_lib_pthread_pthread_mutex_init" == "no" 
+then
+ { { $as_echo "$as_me:$LINENO: error: You are missing one or more required libraries" >&5
+$as_echo "$as_me: error: You are missing one or more required libraries" >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 { $as_echo "$as_me:$LINENO: checking whether CC supports -fomit-frame-pointer" >&5
 $as_echo_n "checking whether CC supports -fomit-frame-pointer... " >&6; }
