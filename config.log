@@ -96,12 +96,12 @@ configure:2589: checking for gcc option to accept ISO C89
 configure:2663: gcc  -c -g -O2  conftest.c >&5
 configure:2670: $? = 0
 configure:2693: result: none needed
-configure:2718: checking how to run the C preprocessor
-configure:2758: gcc -E  conftest.c
-configure:2765: $? = 0
-configure:2796: gcc -E  conftest.c
+configure:2721: checking how to run the C preprocessor
+configure:2761: gcc -E  conftest.c
+configure:2768: $? = 0
+configure:2799: gcc -E  conftest.c
 conftest.c:8:28: error: ac_nonexistent.h: No such file or directory
-configure:2803: $? = 1
+configure:2806: $? = 1
 configure: failed program was:
 | /* confdefs.h.  */
 | #define PACKAGE_NAME "stagemedia"
@@ -111,12 +111,12 @@ configure: failed program was:
 | #define PACKAGE_BUGREPORT "fralick@gmail.com"
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:2836: result: gcc -E
-configure:2865: gcc -E  conftest.c
-configure:2872: $? = 0
-configure:2903: gcc -E  conftest.c
+configure:2839: result: gcc -E
+configure:2868: gcc -E  conftest.c
+configure:2875: $? = 0
+configure:2906: gcc -E  conftest.c
 conftest.c:8:28: error: ac_nonexistent.h: No such file or directory
-configure:2910: $? = 1
+configure:2913: $? = 1
 configure: failed program was:
 | /* confdefs.h.  */
 | #define PACKAGE_NAME "stagemedia"
@@ -126,272 +126,272 @@ configure: failed program was:
 | #define PACKAGE_BUGREPORT "fralick@gmail.com"
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
-configure:2950: checking for grep that handles long lines and -e
-configure:3010: result: /bin/grep
-configure:3015: checking for egrep
-configure:3079: result: /bin/grep -E
-configure:3084: checking for ANSI C header files
-configure:3114: gcc -c -g -O2  conftest.c >&5
-configure:3121: $? = 0
-configure:3220: gcc -o conftest -g -O2   conftest.c  >&5
-configure:3224: $? = 0
-configure:3230: ./conftest
-configure:3234: $? = 0
-configure:3252: result: yes
-configure:3276: checking for sys/types.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for sys/stat.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for stdlib.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for string.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for memory.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for strings.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for inttypes.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for stdint.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3276: checking for unistd.h
-configure:3297: gcc -c -g -O2  conftest.c >&5
-configure:3304: $? = 0
-configure:3321: result: yes
-configure:3351: checking arpa/inet.h usability
-configure:3368: gcc -c -g -O2  conftest.c >&5
-configure:3375: $? = 0
-configure:3389: result: yes
-configure:3393: checking arpa/inet.h presence
-configure:3408: gcc -E  conftest.c
-configure:3415: $? = 0
-configure:3429: result: yes
-configure:3462: checking for arpa/inet.h
-configure:3471: result: yes
-configure:3502: checking ctype.h usability
-configure:3519: gcc -c -g -O2  conftest.c >&5
-configure:3526: $? = 0
-configure:3540: result: yes
-configure:3544: checking ctype.h presence
-configure:3559: gcc -E  conftest.c
-configure:3566: $? = 0
-configure:3580: result: yes
-configure:3613: checking for ctype.h
-configure:3622: result: yes
-configure:3653: checking curl/curl.h usability
-configure:3670: gcc -c -g -O2  conftest.c >&5
-configure:3677: $? = 0
-configure:3691: result: yes
-configure:3695: checking curl/curl.h presence
-configure:3710: gcc -E  conftest.c
-configure:3717: $? = 0
-configure:3731: result: yes
-configure:3764: checking for curl/curl.h
-configure:3773: result: yes
-configure:3804: checking errno.h usability
-configure:3821: gcc -c -g -O2  conftest.c >&5
-configure:3828: $? = 0
-configure:3842: result: yes
-configure:3846: checking errno.h presence
-configure:3861: gcc -E  conftest.c
-configure:3868: $? = 0
-configure:3882: result: yes
-configure:3915: checking for errno.h
-configure:3924: result: yes
-configure:3955: checking fcntl.h usability
-configure:3972: gcc -c -g -O2  conftest.c >&5
-configure:3979: $? = 0
-configure:3993: result: yes
-configure:3997: checking fcntl.h presence
-configure:4012: gcc -E  conftest.c
-configure:4019: $? = 0
-configure:4033: result: yes
-configure:4066: checking for fcntl.h
-configure:4075: result: yes
-configure:4106: checking jansson.h usability
-configure:4123: gcc -c -g -O2  conftest.c >&5
-configure:4130: $? = 0
-configure:4144: result: yes
-configure:4148: checking jansson.h presence
-configure:4163: gcc -E  conftest.c
-configure:4170: $? = 0
-configure:4184: result: yes
-configure:4217: checking for jansson.h
-configure:4226: result: yes
-configure:4257: checking lame/lame.h usability
-configure:4274: gcc -c -g -O2  conftest.c >&5
-configure:4281: $? = 0
-configure:4295: result: yes
-configure:4299: checking lame/lame.h presence
-configure:4314: gcc -E  conftest.c
-configure:4321: $? = 0
-configure:4335: result: yes
-configure:4368: checking for lame/lame.h
-configure:4377: result: yes
-configure:4408: checking math.h usability
-configure:4425: gcc -c -g -O2  conftest.c >&5
-configure:4432: $? = 0
-configure:4446: result: yes
-configure:4450: checking math.h presence
-configure:4465: gcc -E  conftest.c
-configure:4472: $? = 0
-configure:4486: result: yes
-configure:4519: checking for math.h
-configure:4528: result: yes
-configure:4559: checking netdb.h usability
-configure:4576: gcc -c -g -O2  conftest.c >&5
-configure:4583: $? = 0
-configure:4597: result: yes
-configure:4601: checking netdb.h presence
-configure:4616: gcc -E  conftest.c
-configure:4623: $? = 0
-configure:4637: result: yes
-configure:4670: checking for netdb.h
-configure:4679: result: yes
-configure:4710: checking netinet/in.h usability
-configure:4727: gcc -c -g -O2  conftest.c >&5
-configure:4734: $? = 0
-configure:4748: result: yes
-configure:4752: checking netinet/in.h presence
-configure:4767: gcc -E  conftest.c
-configure:4774: $? = 0
-configure:4788: result: yes
-configure:4821: checking for netinet/in.h
-configure:4830: result: yes
-configure:4861: checking pthread.h usability
-configure:4878: gcc -c -g -O2  conftest.c >&5
-configure:4885: $? = 0
-configure:4899: result: yes
-configure:4903: checking pthread.h presence
-configure:4918: gcc -E  conftest.c
-configure:4925: $? = 0
-configure:4939: result: yes
-configure:4972: checking for pthread.h
-configure:4981: result: yes
-configure:5012: checking signal.h usability
-configure:5029: gcc -c -g -O2  conftest.c >&5
-configure:5036: $? = 0
-configure:5050: result: yes
-configure:5054: checking signal.h presence
-configure:5069: gcc -E  conftest.c
-configure:5076: $? = 0
-configure:5090: result: yes
-configure:5123: checking for signal.h
-configure:5132: result: yes
-configure:5163: checking sndfile.h usability
-configure:5180: gcc -c -g -O2  conftest.c >&5
-configure:5187: $? = 0
-configure:5201: result: yes
-configure:5205: checking sndfile.h presence
-configure:5220: gcc -E  conftest.c
-configure:5227: $? = 0
-configure:5241: result: yes
-configure:5274: checking for sndfile.h
-configure:5283: result: yes
-configure:5314: checking stdio.h usability
-configure:5331: gcc -c -g -O2  conftest.c >&5
-configure:5338: $? = 0
-configure:5352: result: yes
-configure:5356: checking stdio.h presence
-configure:5371: gcc -E  conftest.c
-configure:5378: $? = 0
-configure:5392: result: yes
-configure:5425: checking for stdio.h
-configure:5434: result: yes
-configure:5454: checking for stdlib.h
-configure:5461: result: yes
-configure:5605: checking for string.h
-configure:5612: result: yes
-configure:5767: checking sys/select.h usability
-configure:5784: gcc -c -g -O2  conftest.c >&5
-configure:5791: $? = 0
-configure:5805: result: yes
-configure:5809: checking sys/select.h presence
-configure:5824: gcc -E  conftest.c
-configure:5831: $? = 0
-configure:5845: result: yes
-configure:5878: checking for sys/select.h
-configure:5887: result: yes
-configure:5918: checking sys/socket.h usability
-configure:5935: gcc -c -g -O2  conftest.c >&5
-configure:5942: $? = 0
-configure:5956: result: yes
-configure:5960: checking sys/socket.h presence
-configure:5975: gcc -E  conftest.c
-configure:5982: $? = 0
-configure:5996: result: yes
-configure:6029: checking for sys/socket.h
-configure:6038: result: yes
-configure:6069: checking sys/time.h usability
-configure:6086: gcc -c -g -O2  conftest.c >&5
-configure:6093: $? = 0
-configure:6107: result: yes
-configure:6111: checking sys/time.h presence
-configure:6126: gcc -E  conftest.c
-configure:6133: $? = 0
-configure:6147: result: yes
-configure:6180: checking for sys/time.h
-configure:6189: result: yes
-configure:6209: checking for sys/types.h
-configure:6216: result: yes
-configure:6371: checking sys/wait.h usability
-configure:6388: gcc -c -g -O2  conftest.c >&5
-configure:6395: $? = 0
-configure:6409: result: yes
-configure:6413: checking sys/wait.h presence
-configure:6428: gcc -E  conftest.c
-configure:6435: $? = 0
-configure:6449: result: yes
-configure:6482: checking for sys/wait.h
-configure:6491: result: yes
-configure:6511: checking for unistd.h
-configure:6518: result: yes
-configure:6659: checking for pthread_mutex_init in -lpthread
-configure:6694: gcc -o conftest -g -O2   conftest.c -lpthread   >&5
-configure:6701: $? = 0
-configure:6722: result: yes
-configure:6734: checking for lame_init in -lmp3lame
-configure:6769: gcc -o conftest -g -O2   conftest.c -lmp3lame  -lpthread  >&5
-configure:6776: $? = 0
-configure:6797: result: yes
-configure:6809: checking for curl_easy_init in -lcurl
-configure:6844: gcc -o conftest -g -O2   conftest.c -lcurl  -lmp3lame -lpthread  >&5
-configure:6851: $? = 0
-configure:6872: result: yes
-configure:6884: checking for cos in -lm
-configure:6919: gcc -o conftest -g -O2   conftest.c -lm  -lcurl -lmp3lame -lpthread  >&5
+configure:2953: checking for grep that handles long lines and -e
+configure:3013: result: /bin/grep
+configure:3018: checking for egrep
+configure:3082: result: /bin/grep -E
+configure:3087: checking for ANSI C header files
+configure:3117: gcc -c -g -O2  conftest.c >&5
+configure:3124: $? = 0
+configure:3223: gcc -o conftest -g -O2   conftest.c  >&5
+configure:3227: $? = 0
+configure:3233: ./conftest
+configure:3237: $? = 0
+configure:3255: result: yes
+configure:3279: checking for sys/types.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for sys/stat.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for stdlib.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for string.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for memory.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for strings.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for inttypes.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for stdint.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3279: checking for unistd.h
+configure:3300: gcc -c -g -O2  conftest.c >&5
+configure:3307: $? = 0
+configure:3324: result: yes
+configure:3354: checking arpa/inet.h usability
+configure:3371: gcc -c -g -O2  conftest.c >&5
+configure:3378: $? = 0
+configure:3392: result: yes
+configure:3396: checking arpa/inet.h presence
+configure:3411: gcc -E  conftest.c
+configure:3418: $? = 0
+configure:3432: result: yes
+configure:3465: checking for arpa/inet.h
+configure:3474: result: yes
+configure:3505: checking ctype.h usability
+configure:3522: gcc -c -g -O2  conftest.c >&5
+configure:3529: $? = 0
+configure:3543: result: yes
+configure:3547: checking ctype.h presence
+configure:3562: gcc -E  conftest.c
+configure:3569: $? = 0
+configure:3583: result: yes
+configure:3616: checking for ctype.h
+configure:3625: result: yes
+configure:3656: checking curl/curl.h usability
+configure:3673: gcc -c -g -O2  conftest.c >&5
+configure:3680: $? = 0
+configure:3694: result: yes
+configure:3698: checking curl/curl.h presence
+configure:3713: gcc -E  conftest.c
+configure:3720: $? = 0
+configure:3734: result: yes
+configure:3767: checking for curl/curl.h
+configure:3776: result: yes
+configure:3807: checking errno.h usability
+configure:3824: gcc -c -g -O2  conftest.c >&5
+configure:3831: $? = 0
+configure:3845: result: yes
+configure:3849: checking errno.h presence
+configure:3864: gcc -E  conftest.c
+configure:3871: $? = 0
+configure:3885: result: yes
+configure:3918: checking for errno.h
+configure:3927: result: yes
+configure:3958: checking fcntl.h usability
+configure:3975: gcc -c -g -O2  conftest.c >&5
+configure:3982: $? = 0
+configure:3996: result: yes
+configure:4000: checking fcntl.h presence
+configure:4015: gcc -E  conftest.c
+configure:4022: $? = 0
+configure:4036: result: yes
+configure:4069: checking for fcntl.h
+configure:4078: result: yes
+configure:4109: checking jansson.h usability
+configure:4126: gcc -c -g -O2  conftest.c >&5
+configure:4133: $? = 0
+configure:4147: result: yes
+configure:4151: checking jansson.h presence
+configure:4166: gcc -E  conftest.c
+configure:4173: $? = 0
+configure:4187: result: yes
+configure:4220: checking for jansson.h
+configure:4229: result: yes
+configure:4260: checking lame/lame.h usability
+configure:4277: gcc -c -g -O2  conftest.c >&5
+configure:4284: $? = 0
+configure:4298: result: yes
+configure:4302: checking lame/lame.h presence
+configure:4317: gcc -E  conftest.c
+configure:4324: $? = 0
+configure:4338: result: yes
+configure:4371: checking for lame/lame.h
+configure:4380: result: yes
+configure:4411: checking math.h usability
+configure:4428: gcc -c -g -O2  conftest.c >&5
+configure:4435: $? = 0
+configure:4449: result: yes
+configure:4453: checking math.h presence
+configure:4468: gcc -E  conftest.c
+configure:4475: $? = 0
+configure:4489: result: yes
+configure:4522: checking for math.h
+configure:4531: result: yes
+configure:4562: checking netdb.h usability
+configure:4579: gcc -c -g -O2  conftest.c >&5
+configure:4586: $? = 0
+configure:4600: result: yes
+configure:4604: checking netdb.h presence
+configure:4619: gcc -E  conftest.c
+configure:4626: $? = 0
+configure:4640: result: yes
+configure:4673: checking for netdb.h
+configure:4682: result: yes
+configure:4713: checking netinet/in.h usability
+configure:4730: gcc -c -g -O2  conftest.c >&5
+configure:4737: $? = 0
+configure:4751: result: yes
+configure:4755: checking netinet/in.h presence
+configure:4770: gcc -E  conftest.c
+configure:4777: $? = 0
+configure:4791: result: yes
+configure:4824: checking for netinet/in.h
+configure:4833: result: yes
+configure:4864: checking pthread.h usability
+configure:4881: gcc -c -g -O2  conftest.c >&5
+configure:4888: $? = 0
+configure:4902: result: yes
+configure:4906: checking pthread.h presence
+configure:4921: gcc -E  conftest.c
+configure:4928: $? = 0
+configure:4942: result: yes
+configure:4975: checking for pthread.h
+configure:4984: result: yes
+configure:5015: checking signal.h usability
+configure:5032: gcc -c -g -O2  conftest.c >&5
+configure:5039: $? = 0
+configure:5053: result: yes
+configure:5057: checking signal.h presence
+configure:5072: gcc -E  conftest.c
+configure:5079: $? = 0
+configure:5093: result: yes
+configure:5126: checking for signal.h
+configure:5135: result: yes
+configure:5166: checking sndfile.h usability
+configure:5183: gcc -c -g -O2  conftest.c >&5
+configure:5190: $? = 0
+configure:5204: result: yes
+configure:5208: checking sndfile.h presence
+configure:5223: gcc -E  conftest.c
+configure:5230: $? = 0
+configure:5244: result: yes
+configure:5277: checking for sndfile.h
+configure:5286: result: yes
+configure:5317: checking stdio.h usability
+configure:5334: gcc -c -g -O2  conftest.c >&5
+configure:5341: $? = 0
+configure:5355: result: yes
+configure:5359: checking stdio.h presence
+configure:5374: gcc -E  conftest.c
+configure:5381: $? = 0
+configure:5395: result: yes
+configure:5428: checking for stdio.h
+configure:5437: result: yes
+configure:5457: checking for stdlib.h
+configure:5464: result: yes
+configure:5608: checking for string.h
+configure:5615: result: yes
+configure:5770: checking sys/select.h usability
+configure:5787: gcc -c -g -O2  conftest.c >&5
+configure:5794: $? = 0
+configure:5808: result: yes
+configure:5812: checking sys/select.h presence
+configure:5827: gcc -E  conftest.c
+configure:5834: $? = 0
+configure:5848: result: yes
+configure:5881: checking for sys/select.h
+configure:5890: result: yes
+configure:5921: checking sys/socket.h usability
+configure:5938: gcc -c -g -O2  conftest.c >&5
+configure:5945: $? = 0
+configure:5959: result: yes
+configure:5963: checking sys/socket.h presence
+configure:5978: gcc -E  conftest.c
+configure:5985: $? = 0
+configure:5999: result: yes
+configure:6032: checking for sys/socket.h
+configure:6041: result: yes
+configure:6072: checking sys/time.h usability
+configure:6089: gcc -c -g -O2  conftest.c >&5
+configure:6096: $? = 0
+configure:6110: result: yes
+configure:6114: checking sys/time.h presence
+configure:6129: gcc -E  conftest.c
+configure:6136: $? = 0
+configure:6150: result: yes
+configure:6183: checking for sys/time.h
+configure:6192: result: yes
+configure:6212: checking for sys/types.h
+configure:6219: result: yes
+configure:6374: checking sys/wait.h usability
+configure:6391: gcc -c -g -O2  conftest.c >&5
+configure:6398: $? = 0
+configure:6412: result: yes
+configure:6416: checking sys/wait.h presence
+configure:6431: gcc -E  conftest.c
+configure:6438: $? = 0
+configure:6452: result: yes
+configure:6485: checking for sys/wait.h
+configure:6494: result: yes
+configure:6514: checking for unistd.h
+configure:6521: result: yes
+configure:6698: checking for pthread_mutex_init in -lpthread
+configure:6733: gcc -o conftest -g -O2   conftest.c -lpthread   >&5
+configure:6740: $? = 0
+configure:6761: result: yes
+configure:6773: checking for lame_init in -lmp3lame
+configure:6808: gcc -o conftest -g -O2   conftest.c -lmp3lame  -lpthread  >&5
+configure:6815: $? = 0
+configure:6836: result: yes
+configure:6848: checking for curl_easy_init in -lcurl
+configure:6883: gcc -o conftest -g -O2   conftest.c -lcurl  -lmp3lame -lpthread  >&5
+configure:6890: $? = 0
+configure:6911: result: yes
+configure:6923: checking for cos in -lm
+configure:6958: gcc -o conftest -g -O2   conftest.c -lm  -lcurl -lmp3lame -lpthread  >&5
 conftest.c:50: warning: conflicting types for built-in function 'cos'
-configure:6926: $? = 0
-configure:6947: result: yes
-configure:6959: checking for getpid in -ljansson
-configure:6994: gcc -o conftest -g -O2   conftest.c -ljansson  -lm -lcurl -lmp3lame -lpthread  >&5
-configure:7001: $? = 0
-configure:7022: result: yes
-configure:7034: checking whether CC supports -fomit-frame-pointer
-configure:7057: gcc -c -g -O2  conftest.c >&5
-configure:7064: $? = 0
-configure:7069: result: yes
-configure:7083: checking whether CC supports -Wall
+configure:6965: $? = 0
+configure:6986: result: yes
+configure:6998: checking for getpid in -ljansson
+configure:7033: gcc -o conftest -g -O2   conftest.c -ljansson  -lm -lcurl -lmp3lame -lpthread  >&5
+configure:7040: $? = 0
+configure:7061: result: yes
+configure:7083: checking whether CC supports -fomit-frame-pointer
 configure:7106: gcc -c -g -O2  conftest.c >&5
 configure:7113: $? = 0
 configure:7118: result: yes
-configure:7274: creating ./config.status
+configure:7132: checking whether CC supports -Wall
+configure:7155: gcc -c -g -O2  conftest.c >&5
+configure:7162: $? = 0
+configure:7167: result: yes
+configure:7323: creating ./config.status
 
 ## ---------------------- ##
 ## Running config.status. ##
