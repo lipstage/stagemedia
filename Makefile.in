@@ -1,0 +1,17 @@
+CC=@CC@
+CFLAGS=@WALL@ @FOMIT_FRAME_POINTER@
+LDFLAGS=@LDFLAGS@ @LIBS@
+SOURCES := $(shell ls *.c)
+OBJECTS=$(SOURCES:.c=.o)
+EXEC=stagemediad
+
+all: $(SOURCES) $(EXEC)
+
+$(EXEC): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
+.c.o:
+	$(CC) $(CFLAGS) $< -c -o $@
+
+clean:
+	rm -rf $(OBJECTS) $(EXEC)
