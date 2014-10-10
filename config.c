@@ -87,3 +87,12 @@ const char * cfg_read_key_df(const char *key, const char *def) {
 	p = cfg_read_key(key);
 	return (p ? p : def);
 }
+
+int cfg_is_true(const char *key, int def) {
+	const char *p;
+
+	p = cfg_read_key_df(key, def ? "true" : "false");
+	if (!strcasecmp(p, "true") || strcmp(p, "0"))
+		return !0;
+	return 0;
+}

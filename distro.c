@@ -182,9 +182,11 @@ void	*ProcessHandler(pThreads s) {
 	}
 
 	/* user must present a valid cookie -- with login */
-	if (*sessionid == 0 || (valid_session(sessionid) <= 0)) {
-		http_send_header(s->sock, 403, "text/plain");
-		task_finish(s);
+	if (cfg_is_true("api_session_check", 1)) {
+		if (*sessionid == 0 || (valid_session(sessionid) <= 0)) {
+			http_send_header(s->sock, 403, "text/plain");
+			task_finish(s);
+		}
 	}
 
 	/* Send the HTTP header */
