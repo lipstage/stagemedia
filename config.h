@@ -61,4 +61,9 @@
  */
 #undef	ALLOCATE_AUDIO_ENCODING_BUFFER
 
+/*
+ * The default configuration file we're going to load
+ */
+#define CONF_FILE	"stagemedia.conf"
+
 #endif

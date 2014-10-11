@@ -2,12 +2,12 @@
 
 pConfig ConfigHead = NULL;
 
-void	read_config(void) {
+void	read_config(const char *filename) {
 	FILE	*fp;
 	char	buffer[1024];
 	int	count = 0;
 
-	if (!(fp = fopen("stagemedia.conf", "r"))) {
+	if (!(fp = fopen(filename, "r"))) {
 		fprintf(stderr, "no config file found\n");
 		exit(-1);
 	}

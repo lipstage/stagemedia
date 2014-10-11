@@ -12,23 +12,48 @@ void	*DistHandler();
 void	*CleanUp();
 void	*GetFromMaster();
 
-int	main(void) {
+int	main(int argc, char **argv) {
 	int	serverfd;
 	pthread_t	cleanup, master;
 	pSocket	s;
-	int	masterfd;
+	int	masterfd, options;
+	char	*config_file = CONF_FILE;
+
+	/*
+	 * Parse anything for getopt() first
+	 */
+	while ((options = getopt(argc, argv, "hc:")) != -1) {
+		switch (options) {
+			case 'c':
+				config_file = optarg;
+				break;
+			case 'h':
+				fprintf(stdout,
+                        		"%s - StageMedia Server (%s)\n"
+                        		"\n"
+                        		"\t%-20sLoad specified file as config\n"
+                        		"\t%-20sThis screen\n"
+                        		"\n",
+                        		*argv, STAGEMEDIA_VERSION,
+					"-c <file>", "-h");
+		                return -1;
+				break; /* UNREACHABLE */
+			default:
+				abort ();	
+		}
+	}
 
 	/* load the configuration file settings */
-	read_config();
+	read_config(config_file);
 
-//	if (fork())
-//		exit(0);
+	if (fork())
+		exit(0);
 
 	/* refuse to accept SIGPIPE, it kills */
 	signal(SIGPIPE, SIG_IGN);
 
 	/* Is master turned on? */
-	if (cfg_read_key("master") && !strcasecmp(cfg_read_key("master"), "true"))
+	if (cfg_is_true("master", 0))
 		MASTER = 1;
 
 	/*
