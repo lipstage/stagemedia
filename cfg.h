@@ -9,7 +9,7 @@ typedef struct st_config {
 	struct	st_config	*next;
 } Config, *pConfig;
 
-extern	void	read_config(void);
+extern	void	read_config(const char *);
 extern	void	add_config(const char *, const char *);
 extern	const char	*cfg_read_key(const char *);
 extern	const char	*cfg_read_key_df(const char *, const char *);

@@ -33,6 +33,7 @@
 #include "inject.h"
 #include "api.h"
 #include "config.h"
+#include "version.h"
 
 #ifdef	SUPPORT_MP3
 # include  <lame/lame.h>

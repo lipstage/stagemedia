@@ -7,5 +7,6 @@
 max_clients=50
 distro_max_clients=20
 ad_api_url=http://localhost:5000/test
+api_session_check=true
 api_system_url=http://localhost:5001/api/v1/system
 api_logged_session=logged_session
