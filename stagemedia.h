@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -32,6 +33,7 @@
 #include "distro.h"
 #include "inject.h"
 #include "api.h"
+#include "log.h"
 #include "config.h"
 #include "version.h"
 
@@ -57,6 +59,8 @@
 
 #define IsDeadSocket(p)         ((p->deadsocket))
 
+#define	SOCK_FD(x)		((x)->fd)
+
 typedef struct {
         int             deadsocket;
         int             fd;
@@ -66,7 +70,7 @@ typedef struct {
 	unsigned int	flag;
 	
 	char	ip_addr_string[256];
-
+	char	port_string[256];
 } Socket, *pSocket;
 
 extern	int     bind_address(char *theaddr, ushort);

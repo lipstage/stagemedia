@@ -73,6 +73,8 @@ pSocket	sock_accept(int fd) {
 			(new->sin.sin_addr.s_addr >> 16) & 0xff,
 			(new->sin.sin_addr.s_addr >> 24) & 0xff
 		);
+		sprintf(new->port_string, "%u",
+			ntohs(new->sin.sin_port));
 
 		/* set the fd */
 		new->fd = s;
@@ -85,6 +87,9 @@ pSocket	sock_accept(int fd) {
 
 		/* Set as a client */
 		new->flag |= SOCK_FLAG_CLIENT;
+
+		/* log the connection */
+		loge(LOG_INFO, "(fd: %d) Connection established from host %s:%s", new->fd, new->ip_addr_string, new->port_string);
 
 		/* And...we have a connection! */
 		return new;

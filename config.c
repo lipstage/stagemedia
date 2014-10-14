@@ -72,12 +72,26 @@ void	add_config(const char *key, const char *value) {
 	strncpy(new->value, value, sizeof new->value - 1);
 }
 
+void	purge_config(void) {
+	pConfig temp;
+
+	while (ConfigHead) {
+		temp = ConfigHead;
+		ConfigHead = ConfigHead->next;
+		free (temp);
+	}
+}
+
 const char * cfg_read_key(const char *key) {
 	pConfig scan;
 
+	MemLock();
 	for (scan = ConfigHead; scan; scan = scan->next)
-		if (!strcasecmp(scan->key, key))
+		if (!strcasecmp(scan->key, key)) {
+			MemUnlock();
 			return scan->value;
+		}
+	MemUnlock();
 	return NULL;
 }
 
