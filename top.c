@@ -46,6 +46,9 @@ int	main(int argc, char **argv) {
 	/* load the configuration file settings */
 	read_config(config_file);
 
+	/* try to start up the log */
+	log_init();
+
 	if (fork())
 		exit(0);
 
@@ -53,8 +56,11 @@ int	main(int argc, char **argv) {
 	signal(SIGPIPE, SIG_IGN);
 
 	/* Is master turned on? */
-	if (cfg_is_true("master", 0))
+	if (cfg_is_true("master", 0)) {
+		loge(LOG_, "Master mode on");
 		MASTER = 1;
+	} else
+		loge(LOG_, "Master mode off");
 
 	/*
 	 * If we are running in master mode
@@ -64,7 +70,7 @@ int	main(int argc, char **argv) {
 		pthread_create(&master, NULL, MasterServer, NULL);
 		masterfd = bind_address("0.0.0.0", 18101);
 		if (masterfd < 0) {
-			fprintf(stderr, "mode=master; Could not bind to master addresses and/or ports [for dist servers]\n");
+			loge(LOG_ERR, "Unable to bind to port 18101\n");
 			return -1;
 		}
 		/* for ease of use :) */
@@ -112,6 +118,9 @@ int	main(int argc, char **argv) {
 			 * Attempt to create a new task -- if it fails, run this.
 			 */
 			if (!(nt = new_task())) {
+				/* An error has occurred, fairly severe one */
+				loge(LOG_ERR, "Creation of new task failed.  We may be running out of memory");
+
 				/* close the socket -- not much more we can do :( */
 				sock_close(s);
 

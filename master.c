@@ -23,7 +23,7 @@ void	*MasterServer()
 	/* bind to the address and port */
 	input = bind_address("127.0.0.1", 18100);
 	if (input < 0) {
-		fprintf(stderr, "mode=master; Could not bind to master addresses and/or ports [for recorder]\n");
+		loge(LOG_ERR, "Unable to bind to port 18100 (recording)");
 		exit(-1);
 	}
 
