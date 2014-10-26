@@ -1,6 +1,7 @@
 #include "stagemedia.h"
 
 int	SocketPush();
+int	reload(unsigned int), terminate(unsigned int);
 
 /*
  * If master is set to on
@@ -12,12 +13,13 @@ void	*DistHandler();
 void	*CleanUp();
 void	*GetFromMaster();
 
+char	*config_file = CONF_FILE;
+
 int	main(int argc, char **argv) {
 	int	serverfd;
 	pthread_t	cleanup, master;
 	pSocket	s;
 	int	masterfd, options;
-	char	*config_file = CONF_FILE;
 
 	/*
 	 * Parse anything for getopt() first
@@ -52,8 +54,8 @@ int	main(int argc, char **argv) {
 	if (fork())
 		exit(0);
 
-	/* refuse to accept SIGPIPE, it kills */
-	signal(SIGPIPE, SIG_IGN);
+	/* Prepare to handle async signals */
+	signal_init();
 
 	/* Is master turned on? */
 	if (cfg_is_true("master", 0)) {
@@ -94,13 +96,13 @@ int	main(int argc, char **argv) {
 	/* wait about 3 seconds */
 	mypause_time(3);
 
-	/* go into the background */
-	//if (fork())
-	//	exit(0); 
-
 	/* while (1) equiv */
 	for (;;) {
 		pThreads	nt;
+
+		/* attempt to handle certain ``signal'' events */
+		signal_if(SIGNAL_HUP, reload, NULL);
+		signal_if(SIGNAL_TERM, terminate, NULL);
 
 		s = sock_accept(serverfd);
 
@@ -274,3 +276,75 @@ void	*DistHandler(pThreads s) {
 	return NULL;
 }
 
+/*
+ * Reload the configuration once we get a SIGHUP
+ *
+ * NOTE:  It *IS* possible some log entries will be lost
+ * in between the closing of the log and the re-opening.
+ */
+int	reload(unsigned int s) {
+	/* Give some information */
+	loge(LOG_INFO, "Reloading configuration.");
+
+	/* reload the configuration */
+	read_config(config_file);
+
+	/* close the log */
+	log_close();
+
+	/* open the log */
+	log_init();
+
+	return 0;
+}
+
+/*
+ * Perform a graceful shutdown
+ */
+int	terminate(unsigned int s) {
+	int	i, max_time = atoi(cfg_read_key_df("sigterm_max_time", "20"));
+
+	if (max_time < 0) 
+		max_time = 20;
+	
+	/* log the entry */
+	loge(LOG_INFO, "Termination received, initiating a graceful shutdown");
+
+	/* Wait up to N minutes for a graceful termination to occur */
+	for (i = 0; /* BREAK INSIDE */; i++) {
+		int	count;
+
+		/* get the count of tasks */
+		count = task_count();
+		
+		/* Record the number of tasks we have */
+		loge(LOG_INFO, "Task count: %d\n", count);
+
+		/* If count is 0, log it and leave */
+		if (count <= 0) {
+			loge(LOG_INFO, "No tasks running, proceeding to shut down");
+			break;
+		}
+
+		/* wait up to N minutes for a "nice" shut down */
+		if (max_time && i >= max_time) {
+			loge(LOG_INFO, "Exceeded timeout for graceful closure of clients, proceeding to terminate.");
+			break;
+		}
+
+		/* Wait 60 seconds and then we'll re-try */
+		loge(LOG_INFO, "Waiting 60 seconds and re-counting tasks; attempt %d of %d%s", (i + 1), max_time, max_time ? "" : " (infinite retries)");
+		mypause_time(60000);
+	}
+
+	/* close log */
+	log_close();
+
+	/* wait 1 full second */
+	mypause_time(1000);
+
+	/* done */
+	exit (-1);
+
+	return 0;	/* UNREACHABLE */
+}

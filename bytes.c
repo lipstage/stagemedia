@@ -40,8 +40,6 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 		 * This is the first time we've inserted any data into this buffer.
 		 * Actually, we do NOT take ring into account in this case.
 		 */
-		//printf("Step 1 %p %d\n", in->d, in->s);fflush(stdout);
-		
 		if (!out->d) {
 			if (!(out->d = calloc(1, size)))
 				return NULL;
@@ -174,7 +172,7 @@ int	bytes_squash(pBytes in, int n) {
 
 	if (in->s < n) {
 		//return -1;
-		fprintf(stderr, "EXPLAIN TO ME WHAT HAPPEND\n");
+		//fprintf(stderr, "EXPLAIN TO ME WHAT HAPPEND\n");
 		exit(1);
 		return 0;
 	}

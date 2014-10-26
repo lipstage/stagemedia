@@ -12,6 +12,12 @@ void	read_config(const char *filename) {
 		exit(-1);
 	}
 
+	/* Lock memory for reload and all */
+	MemLock();
+
+	/* purge the config */
+	purge_config();
+
 	while (fgets(buffer, sizeof buffer, fp)) {
 		char *p, *tmp;
 
@@ -47,6 +53,11 @@ void	read_config(const char *filename) {
 		
 		add_config(p, tmp);	
 	}
+
+	/* unlock memory */
+	MemUnlock();
+
+	fclose(fp);
 }
 
 void	add_config(const char *key, const char *value) {
@@ -106,7 +117,7 @@ int cfg_is_true(const char *key, int def) {
 	const char *p;
 
 	p = cfg_read_key_df(key, def ? "true" : "false");
-	if (!strcasecmp(p, "true") || strcmp(p, "0"))
+	if (!strcasecmp(p, "true") || !strcmp(p, "0"))
 		return !0;
 	return 0;
 }

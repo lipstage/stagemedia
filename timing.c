@@ -8,8 +8,6 @@ int	trans_quot(int delta, int channels, int bitrate, int el_size) {
 	int	mysize, tsize;
 	float	percent;
 
-	//return 15000;
-
 	/* Size in 1 second */
 	mysize = bitrate * el_size * channels;
 
@@ -49,13 +47,9 @@ int	ms_diff(MSDiff *diff) {
 	if (ret < diff->mindiff)
 		return 0;
 
-	//printf("TV: %lu %lu | %f %f\n", tv.tv_sec, tv.tv_nsec, diff->ts_last, ts_cur);
-	
 	if (ret < 0) {
 		printf("Something done blown up!\n");
-		printf("%d\n", ret);
-		//printf("%f\n", diff->ts_last);
-		//printf("%f\n", ts_cur);
+		//printf("%d\n", ret);
 		return 0;
 	}
 

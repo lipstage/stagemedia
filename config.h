@@ -66,4 +66,17 @@
  */
 #define CONF_FILE	"stagemedia.conf"
 
+/*
+ * Default time we will wait for a stream to start.  For example, once
+ * we have the client connect, we will loop in a thread; we wait for
+ * data to be delivered.  However, if data is not delivered in N time 
+ * (this time), the client will finish and the task will end.
+ *
+ * Can be overwritten with the option ``max_stream_time'' in the distro
+ * configuration.  A time of 0 means wait forever.
+ *
+ * Default: 180 seconds (3 minutes)
+ */
+#define	MAX_STREAM_TIME		180	
+
 #endif
