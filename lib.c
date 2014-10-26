@@ -12,7 +12,7 @@ void    mypause_time(int ms) {
 	select(1, NULL, NULL, NULL, &tv);
 }
 
-void	mypause_fd(int fd, int ms) {
+int	mypause_fd(int fd, int ms) {
 	int	retval;
 	fd_set  rdfs;
 	struct  timeval tv;
@@ -29,4 +29,6 @@ void	mypause_fd(int fd, int ms) {
 	 * Test for data availability.  Return NULL if nothing
          */
 	retval = select(fd+1, &rdfs, NULL, NULL, &tv);
+	
+	return retval;
 }

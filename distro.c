@@ -1,14 +1,8 @@
 #include "stagemedia.h"
 
 int	distro_init(void) {
-	int	pid, serverfd;
+	int	serverfd;
 	pthread_t	cleanup, frommaster;
-
-	if (fork())
-		exit(0);
-
-	/* Ignore the PIPE signal */
-	signal(SIGPIPE, SIG_IGN);
 
 	/* Attempt to bind to the address we'll use for HTTP/streaming */
 	if ((serverfd = bind_address("0.0.0.0", 8055)) < 0) {
@@ -17,18 +11,14 @@ int	distro_init(void) {
 	}
 
 	for (;;) {
-		if ((pid = fork()) == 0) {
-			/* start pulling data from the master server */
-			pthread_create(&frommaster, NULL, GetFromMaster, NULL);
+		/* start pulling data from the master server */
+		pthread_create(&frommaster, NULL, GetFromMaster, NULL);
 
-			/* this is the cleanup job which removes old, stale, or dead connections */
-			pthread_create(&cleanup, NULL, CleanUp, NULL);
+		/* this is the cleanup job which removes old, stale, or dead connections */
+		pthread_create(&cleanup, NULL, CleanUp, NULL);
 
-			/* give back the serverfd! */
-			return (serverfd);
-		} else if (pid > 0) {
-			waitpid(pid, NULL, 0);	
-		}
+		/* give back the serverfd! */
+		return (serverfd);
 	}
 	return -1;
 }
@@ -102,11 +92,17 @@ void	*ProcessHandler(pThreads s) {
 	short	int	audio[MAX_TRANSCODE_CLIP_SIZE + sizeof(short int)] = { 0 };
 #endif
 	int	method = 0;
+	int	init_stream = 0;	/* used locally to indicate we've started a stream */
+	int	max_stream_time = cfg_read_key("max_stream_time") ? atoi(cfg_read_key("max_stream_time")) : MAX_STREAM_TIME;
 	/* time_t	st_time = time(0); */
 	char	sessionid[1024];
 
 	/* set the connect time, NOW */
 	s->connect_epoch = time(0);
+
+	/* debug entry to track when it started */
+	loge(LOG_DEBUG, "(fd: %d, %s:%s) Client connected and distribution thread kicked off at %lu epoch",
+		s->sock->fd, s->sock->ip_addr_string, s->sock->port_string, s->connect_epoch);
 
 	/* set up au */
 	au.channels = 1;
@@ -126,8 +122,12 @@ void	*ProcessHandler(pThreads s) {
 
 	sock_block(s->sock);
 
-	if (http_fetch_request(s->sock, &method, sessionid))
+	/* Get data about the http request */
+	if (http_fetch_request(s->sock, &method, sessionid)) {
+		loge(LOG_DEBUG, "(fd: %d, %s:%s) http_fetch_request returned non-zero, closing task.",
+			s->sock->fd, s->sock->ip_addr_string, s->sock->port_string);
 		task_finish(s);		/* exit */
+	}
 
 	/*
 	 * If we are requesting stats, then it is somewhat simple...
@@ -196,6 +196,9 @@ void	*ProcessHandler(pThreads s) {
 	/* We will now accept the PCM data */
 	SetStatus_Stream(s);
 	
+	/* update the time for last 'big' change again */
+	s->last = time(0);
+
 	/* Get the encoder ready son */
 	encode = encode_mp3_init(au);
 
@@ -215,9 +218,27 @@ void	*ProcessHandler(pThreads s) {
 		}
 		*/
 
+		/*
+		 * If there are no bytes to read, then we proceed
+		 * to wait 50ms, then restart our loop.  We do this
+		 * until their are bytes
+		 */
 		if (!bytes_ready(s->rbuf)) {
 			/* Unlock the memory area -- allow someone else to use it */
 			MemUnlock();
+
+			/* If we haven't received data beyond our time, then it is time to disconnect */
+			if ((!init_stream && max_stream_time >= 0) && ((time(0) - s->last) >= max_stream_time)) {
+				/* close the stream */
+				encode_mp3_close(encode);
+
+				/* write to the log */
+				loge(LOG_INFO, "(fd: %d, %s:%s) Disconnecting client as we failed to start streaming within %d seconds", 
+					s->sock->fd, s->sock->ip_addr_string, s->sock->port_string, max_stream_time);
+				
+				/* and, done */
+				task_finish(s);
+			}
 
 			/* wait up to 50ms */
 			mypause_time(50);
@@ -225,6 +246,9 @@ void	*ProcessHandler(pThreads s) {
 			/* restart */
 			continue;
 		}
+
+		/* internally mark that we've received data */
+		init_stream = 1;
 
 		maxamount = bytes_size(s->rbuf);
 		if (maxamount > MAX_TRANSCODE_CLIP_SIZE)
@@ -336,11 +360,9 @@ void *GetFromMaster() {
 				/* attempt to read the data directly from the socket */
 				if ((count = read(m->fd, buffer, sizeof buffer - 1)) > 0) {
 					/* successful?  add it to the buffer! */
-					//printf("inside!!!! %d\n", count); fflush(stdout);
 					MemLock();
 					input_buffer = bytes_append(input_buffer, buffer, count);
 					MemUnlock();
-					//printf("after!!!!\n"); fflush(stdout);
 				} else if(count < 0) {
 					/* The socket was "just busy" -- we don't do anything here */
 					if(errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -370,8 +392,6 @@ void *GetFromMaster() {
 					mypause_fd(m->fd, 100);
 				}
 
-				//printf("POSITION 2\n");fflush(stdout);
-
 				/*
 				 * If there's nothing in our buffer, then we should wait and try again
 				 * very soon.
@@ -381,30 +401,21 @@ void *GetFromMaster() {
 					continue;
 				}
 
-				//printf("POSITION 3\n");fflush(stdout);
-			
 				if (!(delta = ms_diff(&diff))) {
 					mypause_fd(m->fd, 100);
 					continue;
 				}
 
-				//printf("POSITION 4\n");fflush(stdout);
 				/* Get the size to copy */
 				appx = trans_quot(delta, 1, 22050, 2);
-
-				//printf("POSITION 5\n");fflush(stdout);
 
 				/* Do not overflow the buffer :) */
 				if (appx > sizeof lbuf)
 					appx = sizeof lbuf;
 
-				//printf("POSITION 6\n");fflush(stdout);
-
 				/* pull the data in from the buffer that we have up to 'appx' amount */
 				if ((mys = bytes_extract(input_buffer, lbuf, appx)) <= 0)
 					continue;
-
-				//printf("POSITION 7\n");fflush(stdout);
 
 				MemLock();
 				for (scan = AllThreadsHead; scan; scan = scan->next) 
@@ -416,12 +427,9 @@ void *GetFromMaster() {
 			}
 		}
 
-		//puts("Waiting to reconnect");
-
 		/* wait 10 seconds, then we should kick off a re-connect */
 		mypause_time(1000 * 10);
 
-		//puts("Reconnecting");
 	}
 
 }

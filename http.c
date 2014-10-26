@@ -22,7 +22,7 @@ int	http_fetch_request(pSocket sock, int *method, char *sessionid) {
 		while ((p = strchr(buffer, '\n')))
 			*p = '\0';
 
-		puts(buffer); 
+		//puts(buffer); 
 
 		if (*buffer != '\0' && !term) {
 			/*

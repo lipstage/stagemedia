@@ -11,6 +11,7 @@ typedef struct st_config {
 
 extern	void	read_config(const char *);
 extern	void	add_config(const char *, const char *);
+extern	void	purge_config(void);
 extern	const char	*cfg_read_key(const char *);
 extern	const char	*cfg_read_key_df(const char *, const char *);
 extern	int	cfg_is_true(const char *, int);

@@ -35,8 +35,10 @@ void	log_init(void) {
  * Close down any existing log file which may be open
  */
 void	log_close(void) {
-	if (logfp && logfp != stdout) 
+	if (logfp && logfp != stdout) {
+		loge(LOG_, "closing log");
 		fclose(logfp);
+	}
 	logfp = NULL;
 }
 

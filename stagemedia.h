@@ -34,6 +34,7 @@
 #include "inject.h"
 #include "api.h"
 #include "log.h"
+#include "signal.h"
 #include "config.h"
 #include "version.h"
 
@@ -142,8 +143,8 @@ extern	void	*shouter();
 extern	void	*MasterServer();
 extern	int	au_head_ok(const unsigned char *);
 
-extern	void	mypause();
+extern  void	mypause();
 extern	void	mypause_time();
-extern	void	mypause_fd(int, int);
+extern	int	mypause_fd(int, int);
 
 #endif /* __SLINGMEDIA_H__ */

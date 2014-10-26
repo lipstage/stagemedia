@@ -2,6 +2,9 @@
 
 pThreads	AllThreadsHead = NULL;
 
+/*
+ * Create a new task, which is a sub-process more or less
+ */
 pThreads	new_task(void) {
 	pThreads	p;
 	pBytes		temp;
@@ -53,6 +56,9 @@ pThreads	new_task(void) {
 	return p;
 }
 
+/*
+ * Remove a task (delete the subprocess)
+ */
 void	task_remove(pThreads s) {
 	pThreads	prev, scan;
 
@@ -68,8 +74,14 @@ void	task_remove(pThreads s) {
 	}
 }
 
-
-
+/*
+ * When a task is done, it calls task_finish for cleanup.
+ *
+ *	- Acquires lock
+ *	- Frees the read buffer
+ *	- Closes the file descriptor
+ *	- Sets itself to be "done" -- cleanup will completely remove later
+ */
 void	task_finish(pThreads s) {
 	int	n = 0;
 
@@ -98,6 +110,10 @@ void	task_finish(pThreads s) {
 	pthread_exit(&n);
 }
 
+
+/*
+ * Performs a quick count of the number of tasks we have
+ */
 int	task_count(void) {
 	pThreads	scan;
 	register	int	count = 0;

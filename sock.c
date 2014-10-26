@@ -49,7 +49,8 @@ pSocket	sock_accept(int fd) {
 	struct sockaddr_in	addr;
 
 	/* Wait up to 1 second for a change in the socket (maybe a connection!) */
-	mypause_fd(fd, 1000);
+	if ((mypause_fd(fd, 1000)) <= 0)
+		return NULL;
 
 	/*
 	 * Accept the new connection (if available) and store the IP information
