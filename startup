@@ -1,9 +1,0 @@
-#!/bin/bash
-
-killall -9 stagemediad
-sleep 1;
-cat stagemedia.conf.master > stagemedia.conf
-./stagemediad
-sleep 1;
-cat stagemedia.conf.client > stagemedia.conf
-./stagemediad
