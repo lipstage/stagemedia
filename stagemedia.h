@@ -147,4 +147,7 @@ extern  void	mypause();
 extern	void	mypause_time();
 extern	int	mypause_fd(int, int);
 
+extern	char	*strlower(char *);
+extern	char	*strupper(char *);
+
 #endif /* __SLINGMEDIA_H__ */
