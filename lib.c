@@ -32,3 +32,31 @@ int	mypause_fd(int fd, int ms) {
 	
 	return retval;
 }
+
+/*
+ * Uppercase a given string 
+ */
+char	*strupper(char *s) {
+	char	*p = s;
+
+	while (*s) {
+		if (islower(*s))
+			*s = toupper(*s);
+		s++;
+	}
+	return p;
+}
+
+/*
+ * Lowercase a given string 
+ */
+char	*strlower(char *s) {
+	char	*p = s;
+
+	while (*s) {
+		if (isupper(*s)) 
+			*s = tolower(*s);
+		s++;
+	}
+	return p;
+}

@@ -46,7 +46,8 @@ void	log_close(void) {
  * Make an entry in the log
  */
 void	loge(int level, const char *fmt, ...) {
-	char	buffer[8192], final[8192], lname[64];
+	char	buffer[8192], ts_string[8192], lname[64], msg[8192];
+	register	char	*p;
 	int	max_size = sizeof(buffer) - 512;
 	struct	tm	*td;
 	time_t	now = time(0);
@@ -62,42 +63,44 @@ void	loge(int level, const char *fmt, ...) {
 	 * Create the specified line item entry
 	 */
 	va_start(ap, fmt);
-	vsnprintf(buffer, max_size, fmt, ap);
+	vsnprintf(msg, max_size, fmt, ap);
 	va_end(ap);
 
 	/*
-	 * Generate the time stamp
+	 * If we got \n or \r, we need to ignore it in msg
+	 */
+	while ((p = strchr(msg, '\r')) || (p = strchr(msg, '\n')))
+		*p = '\0';
+
+	/*
+	 * Nothing in msg?  Then, we don't really do anything
+	 */
+	if (!*msg)
+		return;
+
+	/*
+	 * Generate the time stamp string
 	 */
 	td = localtime(&now);
-	strftime(final, 512, "[%m/%d/%Y %H:%M:%S %z %Z", td);
+	strftime(ts_string, 512, "[%m/%d/%Y %H:%M:%S %z %Z]", td);
 
 	/*
 	 * We will now specify the logging level, right?
 	 */
-	if ((log_level_name(lname, sizeof lname - 1, level))) {
-		strncat(final, "(", 512);
-		strncat(final, lname, 512);
-		strncat(final, ")]  ", 512);
-	} else 
-		strncat(final, "]  ", 512);
+	if (!(log_level_name(lname, sizeof lname - 1, level)))
+		strcpy(lname, "base");
 
 	/*
-	 * Copy over the previously formatted stuff
+	 * Create the ``final'' buffer which we will use to write
+	 * to the log
 	 */
-	strncat(final, buffer, sizeof final - 1);
-
-	/*
-	 * In case we have new lines, we get rid of them.
-	 */
-	while (strchr(final, '\n'))
-		*strchr(final, '\n') = '\0';
-	while (strchr(final, '\r'))
-		*strchr(final, '\r') = '\0';
+	snprintf(buffer, sizeof buffer - 1, "%-34s %-9s %s",
+		ts_string, strupper(lname), msg);
 
 	/*
 	 * Write out the log entry
 	 */
-	fprintf(logfp, "%s\n", final);
+	fprintf(logfp, "%s\n", buffer);
 }
 
 char *log_level_name(char *n, int ns, int level) {
