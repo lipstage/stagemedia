@@ -22,7 +22,7 @@ EncMP3	encode_mp3_init(AUFormat au) {
 	lame_set_mode(encode.gfp, MONO);
 
 	if (!(lame_init_params(encode.gfp) >= 0)) {
-		fprintf(stderr, "Lame encoding error happened.\n");
+		loge(LOG_CRITICAL, "Lame encoding error occured, reason unknown.");
 		exit(-1);
 	}
 
@@ -51,7 +51,6 @@ int	encode_mp3_data(
 			rc += nr;
 		} else if (ret < 0) {
 			/* something done blown up -- need to handle this */
-			//fprintf(stderr, "*** ret returned: %d\n", ret);
 		} 
 	}
 

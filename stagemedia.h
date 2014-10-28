@@ -74,9 +74,9 @@ typedef struct {
 	char	port_string[256];
 } Socket, *pSocket;
 
-extern	int     bind_address(char *theaddr, ushort);
+extern	int     bind_address(const char *theaddr, ushort);
 extern	pSocket sock_accept(int);
-extern	pSocket	sock_connect(char *, unsigned short);
+extern	pSocket	sock_connect(const char *, unsigned short);
 extern	int     sock_read_into_buffer(pSocket, int);
 extern	int     sock_read_from_buffer(pSocket, int, void *);
 extern	int     sock_read(pSocket, int, void *);

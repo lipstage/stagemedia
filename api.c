@@ -31,14 +31,18 @@ char	*url_fetch(const char *url, const char *post) {
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
+	loge(LOG_DEBUG, 
+		"url_fetch: Attempting remote query.  url=\"%s\"", url);
+
 	if (post)
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
 
 	res = curl_easy_perform(curl);
 
-	if (res != CURLE_OK) {
-		fprintf(stderr, "It died :(\n");
-	}
+	if (res != CURLE_OK)
+		loge(LOG_DEBUG, "url_fetch: Remote server did not return OK");
+	else
+		loge(LOG_DEBUG, "url_fetch: Remote server returned OK");
 
 	curl_easy_cleanup(curl);
 	return urld.data;
