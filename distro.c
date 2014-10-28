@@ -5,8 +5,9 @@ int	distro_init(void) {
 	pthread_t	cleanup, frommaster;
 
 	/* Attempt to bind to the address we'll use for HTTP/streaming */
-	if ((serverfd = bind_address("0.0.0.0", 8055)) < 0) {
-		fprintf(stderr, "mode=dist; unable to bind to address or socket\n");
+	if ((serverfd = bind_address(cfg_read_key_df("distro_bind_ip", DISTRO_BIND_IP), int_cfg_read_key_df("distro_bind_port", DISTRO_BIND_PORT))) < 0) {
+		loge(LOG_, "Unable to bind to desginated ip/port and cannot continue (binding=%s:%d)",
+			cfg_read_key_df("distro_bind_ip", DISTRO_BIND_IP), int_cfg_read_key_df("distro_bind_port", DISTRO_BIND_PORT));
 		exit(-1);
 	}
 
@@ -282,7 +283,8 @@ void	*ProcessHandler(pThreads s) {
 		mcopy = (maxamount / sizeof(short int)) * sizeof(short int);
 
 		if ( (mcopy % 2) != 0) {
-			fprintf(stderr, "mcopy modulus is off!\n");
+			loge(LOG_WARN, "ProcessHandler: modulus operator expected 0, but is not in fd=%d, %s:%s",
+				s->sock->fd, s->sock->ip_addr_string, s->sock->port_string);
 		}
 
 		/* grab the data */
@@ -337,17 +339,31 @@ void *GetFromMaster() {
 	memset(&diff, 0, sizeof diff);
 
 	for (;;) {
-		if ((m = sock_connect("localhost", 18101))) {
+
+		loge(LOG_INFO, 
+			"Initiating connection to master server %s:%d",
+				cfg_read_key_df("distro_connect_ip", DISTRO_CONNECT_IP), int_cfg_read_key_df("distro_connect_port", DISTRO_CONNECT_PORT));
+
+		if ((m = sock_connect(cfg_read_key_df("distro_connect_ip", DISTRO_CONNECT_IP), int_cfg_read_key_df("distro_connect_port", DISTRO_CONNECT_PORT)))) {
+
+			loge(LOG_INFO,
+				"Connection established to master server %s:%d",
+					cfg_read_key_df("distro_connect_ip", DISTRO_CONNECT_IP), int_cfg_read_key_df("distro_connect_port", DISTRO_CONNECT_PORT));
+
 			count = read(m->fd, buffer, 1024);
 
 			if (count != 1024) {
-				fprintf(stderr, "Expected the primer, didn't get it\n");
-				exit(-1);
+				loge(LOG_, "Expected ``primer'' from host, but did not receive it.  Waiting 60 seconds and will retry.");
+				sock_close(m);
+				mypause_time(1000 * 60);
+				continue;
 			}
 
 			if (Ctrl_UnPrime(buffer) != 1) {
-				fprintf(stderr, "Primer version mismatch\n");
-				exit(-1);
+				loge(LOG_, "The primer received from the master server is a mismatch; it was not expected.  Waiting 60 seconds and will retry.");
+				sock_close(m);
+				mypause_time(1000 * 60);
+				continue;
 			}
 			
 			sock_nonblock(m);
@@ -426,6 +442,10 @@ void *GetFromMaster() {
 				MemUnlock();
 			}
 		}
+
+		/* make a log entry about this */
+		loge(LOG_ERR, "Unable to connect to master server %s:%d.  Waiting 10 seconds and re-trying",
+			cfg_read_key_df("distro_connect_ip", DISTRO_CONNECT_IP), int_cfg_read_key_df("distro_connect_port", DISTRO_CONNECT_PORT));
 
 		/* wait 10 seconds, then we should kick off a re-connect */
 		mypause_time(1000 * 10);

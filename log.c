@@ -79,16 +79,22 @@ void	loge(int level, const char *fmt, ...) {
 		return;
 
 	/*
-	 * Generate the time stamp string
-	 */
-	td = localtime(&now);
-	strftime(ts_string, 512, "[%m/%d/%Y %H:%M:%S %z %Z]", td);
-
-	/*
 	 * We will now specify the logging level, right?
 	 */
 	if (!(log_level_name(lname, sizeof lname - 1, level)))
 		strcpy(lname, "base");
+
+	/*
+	 * Check whether or not we want to even log this message
+	 */
+	if (!log_should(lname))
+		return;
+
+	/*
+	 * Generate the time stamp string
+	 */
+	td = localtime(&now);
+	strftime(ts_string, 512, "[%m/%d/%Y %H:%M:%S %z %Z]", td);
 
 	/*
 	 * Create the ``final'' buffer which we will use to write
@@ -117,10 +123,75 @@ char *log_level_name(char *n, int ns, int level) {
 		case LOG_ERR:
 			strncpy(n, "err", ns);
 			break;
+		case LOG_CRITICAL:
+			strncpy(n, "critical", ns);
+			break;
 		case LOG_:
 		default:
 			return NULL;
 			break;	/* UNREACHABLE */
 	}
 	return n;
+}
+
+
+int	log_should(const char *name) {
+	static	int	config_version;
+	static	char	log_levels[8192] = { 0 }, *field[128] = { NULL };
+	int	i, cur_version = cfg_version();
+
+	/* Base is "always" */
+	if (!strcasecmp(name, "base"))
+		return 1;
+
+	/*
+	 * We ONLY do this if the version has changed.  This should
+	 * help with performance quite a bit
+	 */
+	if (cur_version != config_version) {
+		/* Get the option -- if it is there */
+		const char *p = cfg_read_key("log_levels");
+
+		/* be atomic */
+		atomic();
+	
+		/* Set all fields to NULL */
+		for (i = 0; i < (sizeof(field) / sizeof(*field)); i++)
+			field[i] = NULL;
+
+		/* zero out log_levels */
+		memset(log_levels, 0, sizeof log_levels);
+
+		/* No config for that?  no problem */
+		if (!p) {
+			noatomic();
+			return 1;
+		}
+
+		/* Copy it, so we can start splicing it up */
+		strncpy(log_levels, p, sizeof log_levels - 1);
+
+		/* Splice it */
+		for (
+			i = 0, field[i] = strtok(log_levels, ","); 
+			i < ((sizeof(field) / sizeof(*field)) - 1) && field[i]; 
+			field[++i] = strtok(NULL, ",")
+		);
+
+		/* update my version */
+		config_version = cur_version;
+
+		/* No need now */
+		noatomic();
+	}
+
+	if (field[0]) {
+		for (i = 0; field[i]; i++) {
+			if (!strcasecmp(name, field[i]))
+				return 1;
+		}
+	} else
+		return 1;
+
+	return 0;
 }

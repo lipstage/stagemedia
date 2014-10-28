@@ -46,7 +46,7 @@ int	main(int argc, char **argv) {
 	}
 
 	/* load the configuration file settings */
-	read_config(config_file);
+	read_config(config_file, 1);
 
 	/* try to start up the log */
 	log_init();
@@ -70,7 +70,9 @@ int	main(int argc, char **argv) {
 	if (MASTER) {
 		/* kick off the master server thread :) */
 		pthread_create(&master, NULL, MasterServer, NULL);
-		masterfd = bind_address("0.0.0.0", 18101);
+		masterfd = bind_address(
+			cfg_read_key_df("master_bind_distro_ip", MASTER_BIND_DISTRO_IP),
+			int_cfg_read_key_df("master_bind_distro_port", MASTER_BIND_DISTRO_PORT));
 		if (masterfd < 0) {
 			loge(LOG_ERR, "Unable to bind to port 18101\n");
 			return -1;
@@ -79,19 +81,8 @@ int	main(int argc, char **argv) {
 		serverfd = masterfd;
 		pthread_create(&cleanup, NULL, CleanUp, NULL);
 	} else {
-/*
-		if ((serverfd = bind_address("0.0.0.0", 8055)) < 0) {
-			fprintf(stderr, "mode=dist; unable to bind to address or socket\n");
-			return -1;
-		}
-
-		pthread_create(&frommaster, NULL, GetFromMaster, NULL);
-*/
 		serverfd = distro_init();
 	}
-
-	/* This is the back-end 'cleanup' job */
-	//pthread_create(&cleanup, NULL, CleanUp, NULL);
 
 	/* wait about 3 seconds */
 	mypause_time(3);
@@ -284,16 +275,22 @@ void	*DistHandler(pThreads s) {
  */
 int	reload(unsigned int s) {
 	/* Give some information */
-	loge(LOG_INFO, "Reloading configuration.");
+	loge(LOG_, "Reloading configuration.");
 
 	/* reload the configuration */
-	read_config(config_file);
+	if ((read_config(config_file, 0)) < 0) {
+		loge(LOG_INFO, "Error occurred during read_config.  Stopping reload operation.");
+		return -1;
+	}
 
 	/* close the log */
 	log_close();
 
 	/* open the log */
 	log_init();
+
+	/* Log our new version that we've gotten */
+	loge(LOG_DEBUG, "reload: New configuration version established (%d)", cfg_version());
 
 	return 0;
 }

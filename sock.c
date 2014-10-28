@@ -4,7 +4,7 @@
 /*
  * Bind to a specific address and port
  */
-int	bind_address(char *theaddr, ushort port) {
+int	bind_address(const char *theaddr, ushort port) {
 	int s, yes = 1;
 	struct sockaddr_in addr;
 
@@ -148,7 +148,7 @@ int	sock_read_into_buffer(pSocket s, int maxsize) {
 	if (s->bpos == 0) {
 		/* size accordingly */
 		if (!(s->in_buf = calloc(1, si))) {
-			fprintf(stderr, "***Out of memory!\n");
+			loge(LOG_ERR, "sock_read_into_buffer: Out of memory!");
 			return -1;			
 		}
 
@@ -285,7 +285,7 @@ void sock_close(pSocket s) {
 /*
  * Connect to a remote server
  */
-pSocket	sock_connect(char *where, unsigned short uport) {
+pSocket	sock_connect(const char *where, unsigned short uport) {
 	struct	addrinfo	hints, *res;
 	char	port[64];
 	int	fd;

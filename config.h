@@ -79,4 +79,37 @@
  */
 #define	MAX_STREAM_TIME		180	
 
+/*
+ * The following are default settings used for bindings.  In the configuration,
+ * they can be overwritten using their respective configuration parameters.
+ *
+ * config_option		default
+ * master_bind_distro_ip	MASTER_BIND_DISTRO_IP
+ * master_bind_distro_port	MASTER_BIND_DISTRO_PORT
+ * master_bind_recv_ip		MASTER_BIND_RECV_IP
+ * master_bind_recv_port	MASTER_BIND_RECV_PORT
+ */
+#define	MASTER_BIND_DISTRO_IP		"0.0.0.0"		/* The IP distribution servers will use to connect to (all 0's = every IP) */
+#define	MASTER_BIND_DISTRO_PORT		18001			/* The port distribution servers will connect to */
+#define	MASTER_BIND_RECV_IP		"127.0.0.1"		/* The IP address the recorder (probably a web interface or similar) will connect to;
+								   gets PCM data.
+								*/
+#define	MASTER_BIND_RECV_PORT		18000			/* The port the recorder will connect to */
+
+
+/*
+ * These are only valid in distribution mode and are the IP address
+ * and port the distribution server will bind to.  These can be
+ * over-written with their respective configuration parameters.
+ *
+ * config_option		default
+ * distro_bind_ip		DISTRO_BIND_IP
+ * distro_bind_port		DISTRO_BIND_PORT
+ */
+#define	DISTRO_BIND_IP			"0.0.0.0"
+#define	DISTRO_BIND_PORT		8055
+
+#define	DISTRO_CONNECT_IP		"127.0.0.1"
+#define	DISTRO_CONNECT_PORT		18001
+
 #endif

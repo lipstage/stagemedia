@@ -39,7 +39,7 @@ int	Ctrl_UnPrime(unsigned char *buffer) {
 
 	if (buffer[0] == 'S' && buffer[1] == 'T' && buffer[2] == 'c' && buffer[3] == 'M') {
 		if (buffer[4] != 1) {
-			fprintf(stderr, "Unknown version from primer\n");
+			loge(LOG_ERR, "Ctrl_UnPrime: Unknown version received from primer");
 			return -1;
 		}
 		val = *((unsigned short int *)&buffer[5]);

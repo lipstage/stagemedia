@@ -22,7 +22,7 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 
 	/* that just is nonsense */
 	if (size < 0) {
-		fprintf(stderr, "I RECEIVED NONSENSE!!!!!! %d\n", size);
+		loge(LOG_CRITICAL, "bytes_append: Returned size of less than 0.  Expected behavior size=%d", size);
 		exit(-1);
 		return in;
 	}
@@ -167,13 +167,11 @@ int	bytes_squash(pBytes in, int n) {
 	int	newsize;	
 
 	if (!in || !in->d)
-		//return -1;
 		return 0;
 
 	if (in->s < n) {
-		//return -1;
-		//fprintf(stderr, "EXPLAIN TO ME WHAT HAPPEND\n");
-		exit(1);
+		loge(LOG_CRITICAL, "bytes_squash: Input bytes is less than n.  Unexpected behavior");
+		exit(-1);
 		return 0;
 	}
 

@@ -21,9 +21,11 @@ void	*MasterServer()
 	au.sample_rate = 22050;
 
 	/* bind to the address and port */
-	input = bind_address("127.0.0.1", 18100);
+	input = bind_address(
+		cfg_read_key_df("master_bind_recv_ip", MASTER_BIND_RECV_IP), 
+		int_cfg_read_key_df("master_bind_recv_port", MASTER_BIND_RECV_PORT));
 	if (input < 0) {
-		loge(LOG_ERR, "Unable to bind to port 18100 (recording)");
+		loge(LOG_CRITICAL, "Unable to bind to port %d (recording)", int_cfg_read_key_df("master_bind_recv_port", MASTER_BIND_RECV_PORT));
 		exit(-1);
 	}
 
@@ -59,7 +61,6 @@ void	*MasterServer()
 					memcpy(potheader, data, 24);
 
 					aok = au_head_ok(potheader);
-					//printf("aok = %d\n", aok);
 					if (aok == 1) {
 						memmove(data, &data[3], si - 24);
 						si -= 24;
