@@ -166,6 +166,19 @@ const char * cfg_read_key(const char *key) {
 	return NULL;
 }
 
+void	cfg_dump(void) {
+	pConfig scan = ConfigHead;
+
+	MemLock();
+	debug2("--- Dumping all configuration options");
+	while (scan) {
+		debug2("--- %s = %s", scan->key, scan->value);
+		scan = scan->next;
+	}
+	debug2("--- End of configuration dump");
+	MemUnlock();
+}
+
 const char * cfg_read_key_df(const char *key, const char *def) {
 	const	char	*p;
 	
@@ -197,24 +210,58 @@ int	pid_file(int toopen) {
 	static char	pid_file_name[8192];
 	const char	*p;
 
+	/*
+	 * If we *should* kick off a pid file.  Must be in the configuration and we
+	 * can't have it already open.
+	 */
 	if (toopen && !pid_file) {
-		if (!(p = cfg_read_key("pid_file")))
+		/* In the config? */
+		if (!(p = cfg_read_key("pid_file"))) {
+			debug2("No pid file set in configuration, skipping.");
 			return 0;
+		}
 
+		/* We aren't able to make the pid? */
 		if (!(pid_file = fopen(p, "w"))) {
-			fprintf(stderr, "Cannot create pid file\n");
+			/* log the error */
+			loge(LOG_CRITICAL, "Unable to create pid file: %s", p);
+
+			/* die :( */
 			exit (-1);
 		}
-		fprintf(pid_file, "%d\n", getpid());
 
+		/* verbose logging */		
+		debug2("Opened pid_file (%s) and preparing to write our pid (%d)", p, getpid());
+
+		/* write the pid and flush */
+		fprintf(pid_file, "%d\n", getpid());
+		fflush(pid_file);
+
+		/* save the name */
 		strncpy(pid_file_name, p, sizeof pid_file_name - 1);
 	} else {
+		/* If we opened up one previously */
 		if (pid_file) {
+			/* verbose */
+			debug2("Closing pid_file file descriptor (%s)", pid_file_name);
+
+			/* close the file descriptor */
 			fclose(pid_file);
+
+			/* more verose, yes */
+			debug2("Deleting pid_file (%s)", pid_file_name);
+
+			/* delete it */
 			unlink(pid_file_name);
+
+			/* zero out and clean so we can open up later */
 			memset(pid_file_name, 0, sizeof pid_file_name);
 			pid_file = NULL;
-		}
+		} else
+			loge(LOG_DEBUG2, "No pid file previously opened, skipping the close.");
+		
 	}
+
+	debug2("Leaving function pid_file and returning");
 	return 0;
 }
