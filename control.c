@@ -1,5 +1,5 @@
+/** \file */
 #include "stagemedia.h"
-
 
 /*
  * This places data in the format of the StageCOM Protocol.
@@ -175,20 +175,3 @@ void Ctrl_Pack_Free(pBytes s) {
 }
 
 
-/*
-int	main() {
-	CtrlData	ct;
-	pBytes		d;
-	char	buffer[1024];
-
-	Ctrl_Primer(1, buffer, sizeof buffer);
-	printf("%d\n", Ctrl_UnPrime(buffer));
-	d = Ctrl_Datum("testing", strlen("testing")+1);
-	Ctrl_Unpack(&ct, d->d, 1000);
-	Ctrl_Pack_Free(d);
-	printf("%d\n", ct.dsize);
-	puts(ct.data);
-
-	return 0;
-}
-*/

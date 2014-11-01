@@ -28,6 +28,8 @@ void	log_init(void) {
 	setvbuf(logfp, log_buffer, _IOLBF, sizeof log_buffer);
 
 	/* it worked (probably), so write something out */
+	loge(LOG_, "StageMedia version %s starting up.", STAGEMEDIA_VERSION);
+	loge(LOG_, "Compiled %s at %s", __DATE__, __TIME__);
 	loge(LOG_, "Log file started, pid = %d\n", getpid());
 }
 
@@ -113,6 +115,9 @@ char *log_level_name(char *n, int ns, int level) {
 	switch (level) {
 		case LOG_DEBUG:
 			strncpy(n, "debug", ns);
+			break;
+		case LOG_DEBUG2:
+			strncpy(n, "debug2", ns);
 			break;
 		case LOG_INFO:
 			strncpy(n, "info", ns);

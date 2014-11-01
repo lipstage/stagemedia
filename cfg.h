@@ -18,5 +18,6 @@ extern	const char	*cfg_read_key(const char *);
 extern	const char	*cfg_read_key_df(const char *, const char *);
 extern	int	cfg_is_true(const char *, int);
 extern	int	cfg_version(void);
+extern	int	pid_file(int);
 
 #endif /* __CFG_H__ */

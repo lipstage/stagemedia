@@ -48,6 +48,9 @@ int	main(int argc, char **argv) {
 	/* load the configuration file settings */
 	read_config(config_file, 1);
 
+	/* create the pid file */
+	pid_file(1);
+
 	/* try to start up the log */
 	log_init();
 
