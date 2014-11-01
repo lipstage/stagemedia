@@ -48,14 +48,17 @@ int	main(int argc, char **argv) {
 	/* load the configuration file settings */
 	read_config(config_file, 1);
 
-	/* create the pid file */
-	pid_file(1);
-
 	/* try to start up the log */
 	log_init();
 
 	if (fork())
 		exit(0);
+
+	/* dump config */
+	cfg_dump();
+
+	/* create the pid file */
+	pid_file(1);
 
 	/* Prepare to handle async signals */
 	signal_init();
@@ -342,6 +345,9 @@ int	terminate(unsigned int s) {
 
 	/* wait 1 full second */
 	mypause_time(1000);
+
+	/* remove pid file */
+	pid_file(0);
 
 	/* done */
 	exit (-1);
