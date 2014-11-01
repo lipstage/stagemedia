@@ -12,13 +12,6 @@ int	pcm_data_push(void *, int);
 void	*MasterServer()
 {
 	int	input;
-	AUFormat	au;
-
-	au.channels = 1;
-	au.data_offset = -1;
-	au.data_size = -1;	
-	au.encoding = 3;
-	au.sample_rate = 22050;
 
 	/* bind to the address and port */
 	input = bind_address(

@@ -4,6 +4,9 @@ pConfig ConfigHead = NULL;
 pConfig TmpConfigHead = NULL;
 static	int	version = 1;
 
+/*
+ * Reads the file and loads the user-defined configuration
+ */
 int	read_config(const char *filename, int isboot) {
 	FILE	*fp;
 	char	buffer[1024];
@@ -25,9 +28,6 @@ int	read_config(const char *filename, int isboot) {
 	/* Lock memory for reload and all */
 	MemLock();
 
-	/* purge the config */
-	/* purge_config(&ConfigHead); */
-
 	while (fgets(buffer, sizeof buffer, fp)) {
 		char *p, *tmp;
 
@@ -47,7 +47,7 @@ int	read_config(const char *filename, int isboot) {
 		tmp = strchr(p, '=');
 		if (!tmp) {
 			if (isboot) {
-				fprintf(stderr, "line %d: Syntax error, no ``='' found", count);
+				fprintf(stderr, "line %d: Syntax error, no ``='' found\n", count);
 				exit (-1);
 			} else {
 				/* log our displeasure of the situation */
@@ -117,8 +117,6 @@ int	read_config(const char *filename, int isboot) {
 
 	fclose(fp);
 
-
-
 	return 0;
 }
 
@@ -186,4 +184,37 @@ int cfg_is_true(const char *key, int def) {
 
 int	cfg_version(void) {
 	return version;
+}
+
+
+/*
+ * If a pid file is "asked" then this is the place to call.
+ *
+ * We do not make one by default
+ */
+int	pid_file(int toopen) {
+	static FILE	*pid_file;
+	static char	pid_file_name[8192];
+	const char	*p;
+
+	if (toopen && !pid_file) {
+		if (!(p = cfg_read_key("pid_file")))
+			return 0;
+
+		if (!(pid_file = fopen(p, "w"))) {
+			fprintf(stderr, "Cannot create pid file\n");
+			exit (-1);
+		}
+		fprintf(pid_file, "%d\n", getpid());
+
+		strncpy(pid_file_name, p, sizeof pid_file_name - 1);
+	} else {
+		if (pid_file) {
+			fclose(pid_file);
+			unlink(pid_file_name);
+			memset(pid_file_name, 0, sizeof pid_file_name);
+			pid_file = NULL;
+		}
+	}
+	return 0;
 }
