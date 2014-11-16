@@ -24,10 +24,13 @@ int	main(int argc, char **argv) {
 	/*
 	 * Parse anything for getopt() first
 	 */
-	while ((options = getopt(argc, argv, "hc:")) != -1) {
+	while ((options = getopt(argc, argv, "hc:p:")) != -1) {
 		switch (options) {
 			case 'c':
 				config_file = optarg;
+				break;
+			case 'p':
+				superhead_config_add("pid_file", optarg);
 				break;
 			case 'h':
 				fprintf(stdout,
@@ -35,9 +38,12 @@ int	main(int argc, char **argv) {
                         		"\n"
                         		"\t%-20sLoad specified file as config\n"
                         		"\t%-20sThis screen\n"
+					"\t%-20sSpecify a pid file to use when starting -- will over-ride pid_file in config file\n"
                         		"\n",
                         		*argv, STAGEMEDIA_VERSION,
-					"-c <file>", "-h");
+					"-c <file>", 
+					"-h",
+					"-p <file>");
 		                return -1;
 				break; /* UNREACHABLE */
 			default:
