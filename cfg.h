@@ -13,6 +13,7 @@ typedef struct st_config {
 
 extern	int	read_config(const char *, int);
 extern	void	add_config(pConfig *, const char *, const char *);
+extern	void	superhead_config_add(const char *, const char *);
 extern	void	purge_config(pConfig *);
 extern	const char	*cfg_read_key(const char *);
 extern	const char	*cfg_read_key_df(const char *, const char *);
