@@ -24,10 +24,24 @@ int	main(int argc, char **argv) {
 	/*
 	 * Parse anything for getopt() first
 	 */
-	while ((options = getopt(argc, argv, "hc:p:")) != -1) {
+	while ((options = getopt(argc, argv, "hc:p:m:s:")) != -1) {
 		switch (options) {
 			case 'c':
 				config_file = optarg;
+				break;
+			case 'm':
+				if (!strcasecmp(optarg, "master"))
+					superhead_config_add("master", "true");
+				else if (!strcasecmp(optarg, "distro"))
+					superhead_config_add("master", "false");
+				else {
+					fprintf(stderr,
+						"Invalid mode specified ``%s''\n", optarg);
+					return -1;
+				}
+				break;
+			case 's':
+				superhead_config_add("__STANZA__", optarg);
 				break;
 			case 'p':
 				superhead_config_add("pid_file", optarg);
@@ -38,12 +52,16 @@ int	main(int argc, char **argv) {
                         		"\n"
                         		"\t%-20sLoad specified file as config\n"
                         		"\t%-20sThis screen\n"
+					"\t%-20sMode the server should run in (one of: distro or master)\n"
 					"\t%-20sSpecify a pid file to use when starting -- will over-ride pid_file in config file\n"
+					"\t%-20sStanza Name used in the config.  We will ONLY load options with this stanza name\n"
                         		"\n",
                         		*argv, STAGEMEDIA_VERSION,
 					"-c <file>", 
 					"-h",
-					"-p <file>");
+					"-m <mode>",
+					"-p <file>",
+					"-s <stanza_name>");
 		                return -1;
 				break; /* UNREACHABLE */
 			default:
@@ -53,6 +71,13 @@ int	main(int argc, char **argv) {
 
 	/* load the configuration file settings */
 	read_config(config_file, 1);
+
+	/* We must have loaded something, somewhere */
+	if (!cfg_lines()) {
+		fprintf(stderr, 
+			"Failed to load any configuration options\n");
+		exit(-1);
+	}
 
 	/* try to start up the log */
 	log_init();

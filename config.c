@@ -11,7 +11,18 @@ static	int	version = 1;
 int	read_config(const char *filename, int isboot) {
 	FILE	*fp;
 	char	buffer[1024];
-	int	count = 0;
+	int	count = 0, doload = 0;
+	const	char	*stanza;
+	char	stanza_start[64], stanza_end[64];
+
+	/* Get the superhead key -- if we have one */
+	if ((stanza = cfg_read_superhead_key("__STANZA__"))) {
+		snprintf(stanza_start, sizeof stanza_start,  "<%s>", stanza);
+		snprintf(stanza_end, sizeof stanza_end, "</%s>", stanza);
+	} else 
+		doload = 1;
+
+
 
 	/*
 	 * Open the file for reading
@@ -45,6 +56,39 @@ int	read_config(const char *filename, int isboot) {
 			p++;
 		if (!*p || *p == '#')
 			continue;
+
+		if (*p == '<' && p[strlen(p)-1] == '>') {
+			if (!stanza) {
+				if (isboot) {
+					fprintf(stderr,
+						"Stanza found, but no stanza specified on the command line...cannot continue :-(\n");
+					exit(-1);
+				} else {
+					loge(LOG_CRITICAL, "Stanza found, but no stanza found on the command line.  I have to die now :-(");
+					exit (-1);
+				}
+			}
+
+			if (!doload && !strcmp(stanza_start, p)) 
+				++doload;
+			else if (doload && !strcmp(stanza_end, p)) 
+				break;
+			else if ( (!doload && !strcmp(stanza_end, p)) ||  (doload && strcmp(stanza_start, p)) ) {
+				if (isboot) {
+					fprintf(stderr, "Stanza error\n");
+					exit(-1);
+				} else {
+					loge(LOG_CRITICAL, "You have an error in your stanzas...dying");
+					exit(-1);
+				}
+			}
+			continue;			
+		}
+
+		/* We ONLY load if the flag is set */
+		if (!doload)
+			continue;
+
 		tmp = strchr(p, '=');
 		if (!tmp) {
 			if (isboot) {
@@ -127,6 +171,12 @@ int	read_config(const char *filename, int isboot) {
 void	add_config(pConfig *head, const char *key, const char *value) {
 	pConfig new;
 
+	/* This is a key that we won't add UNLESS it is superhead */
+	if (head  && *head != SuperConfigHead) {
+		if (!strcasecmp(key, "__STANZA__"))
+			return;
+	}
+
 	if (!(new = calloc(1, sizeof *new))) {
 		loge(LOG_CRITICAL, "add_config: Memory allocation error occurred during setting");
 		exit(-1);
@@ -196,6 +246,37 @@ const char * cfg_read_key(const char *key) {
 	MemUnlock();
 	return NULL;
 }
+
+/*
+ * Reads ONLY the superhead.  Otherwise, this is pretty much identical to
+ * cfg_read_key()
+ */
+const char * cfg_read_superhead_key(const char *key) {
+	pConfig	scan;
+	
+	MemLock();
+	for (scan = SuperConfigHead; scan; scan = scan->next) 
+		if (!strcasecmp(scan->key, key)) {
+			MemUnlock();
+			return scan->value;
+		}
+	MemUnlock();
+	return NULL;
+}
+
+
+/*
+ * Throw back number of configuration lines
+ */
+int	cfg_lines(void) {
+	pConfig scan;
+	int	count;
+
+	for (scan = ConfigHead, count = 0; scan; scan = scan->next, ++count)
+		;
+	return count;
+}
+
 
 /*
  * Dumps the configuration and sends it to the log, for fun
