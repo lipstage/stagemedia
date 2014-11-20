@@ -150,4 +150,6 @@ extern	int	mypause_fd(int, int);
 extern	char	*strlower(char *);
 extern	char	*strupper(char *);
 
+extern	char	*trim(char *);
+
 #endif /* __SLINGMEDIA_H__ */

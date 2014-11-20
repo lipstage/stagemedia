@@ -60,3 +60,25 @@ char	*strlower(char *s) {
 	}
 	return p;
 }
+
+/*
+ * Trim a string
+ */
+char *trim(char *s) {
+	char	*p;
+	int	len;
+
+	/* trim off the back first */
+	while ( (p = strrchr(s, '\r')) || (p = strrchr(s, '\n')) )
+		*p = '\0';
+ 
+	len = strlen(s);
+	p = s;
+	while (*p && isspace(*p)) 
+		memmove(s, (p + 1), --len);
+	
+	for (p = s + strlen(p) -1; *s && isspace(*p); --p) 
+		*p = '\0';
+	
+	return s;
+}
