@@ -101,6 +101,9 @@ void	*ProcessHandler(pThreads s) {
 	/* set the connect time, NOW */
 	s->connect_epoch = time(0);
 
+	/* zero out the sessionid */
+	memset(s->sessionid, 0, sizeof s->sessionid);
+
 	/* debug entry to track when it started */
 	loge(LOG_DEBUG, "(fd: %d, %s:%s) Client connected and distribution thread kicked off at %lu epoch",
 		s->sock->fd, s->sock->ip_addr_string, s->sock->port_string, s->connect_epoch);
@@ -148,6 +151,9 @@ void	*ProcessHandler(pThreads s) {
 		/* Lock the memory to prevent changes */
 		MemLock();
 
+		snprintf(buffer, sizeof buffer - 1, "V %s\r\n", STAGEMEDIA_VERSION);
+		SocketPush(s, buffer, strlen(buffer));
+ 
 		for (scan = AllThreadsHead; scan; scan = scan->next) {
 			char	status_name[512];
 			time_t	seconds_connected = 0;
@@ -159,12 +165,13 @@ void	*ProcessHandler(pThreads s) {
 			seconds_connected = ( time(0) - scan->connect_epoch );
 
 			/* this is the format we're going to push out */
-			snprintf(buffer, sizeof buffer - 1, "%d: ip_addr=%s,status=%s,con_sec=%lu,pcm_buf=%d\r\n", 
+			snprintf(buffer, sizeof buffer - 1, "C %d: ip_addr=%s,status=%s,con_sec=%lu,pcm_buf=%d,sessionid=%s\r\n", 
 				++count, 
 				scan->sock ? scan->sock->ip_addr_string : "N/A",
 				status_name,
 				seconds_connected,
-				bytes_size(scan->rbuf)
+				bytes_size(scan->rbuf),
+				!*scan->sessionid ? "" : scan->sessionid
 			);
 			SocketPush(s, buffer, strlen(buffer));
 		}
@@ -184,10 +191,21 @@ void	*ProcessHandler(pThreads s) {
 
 	/* user must present a valid cookie -- with login */
 	if (cfg_is_true("api_session_check", 1)) {
+
+		/* Invalid sesion.  The API says "no" to this */
 		if (*sessionid == 0 || (valid_session(sessionid) <= 0)) {
 			http_send_header(s->sock, 403, "text/plain");
 			task_finish(s);
+			loge(LOG_INFO, "Denying connection (fd: %d) from %s:%s due to invalid session",
+				s->sock->fd, s->sock->ip_addr_string, s->sock->port_string);				
 		}
+
+		/* Log that we've authenticated the session */
+		loge(LOG_INFO, "Accepting connection (fd: %d) from %s:%s with session id = %s",
+			s->sock->fd, s->sock->ip_addr_string, s->sock->port_string, sessionid);
+
+		/* Copy in the sessionid */
+		strncpy(s->sessionid, sessionid, sizeof (s->sessionid) - 1);
 	}
 
 	/* Send the HTTP header */

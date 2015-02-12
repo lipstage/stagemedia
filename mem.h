@@ -55,6 +55,8 @@ typedef struct	st_Threads {
 	unsigned int	status;
 	time_t		connect_epoch;		/* the time the socket was connected or, to be specific, when the task was created */
 	int		ad_inject;
+
+	char	sessionid[256];
 } *pThreads, Threads;
 
 extern	pThreads	AllThreadsHead;
