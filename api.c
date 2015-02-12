@@ -15,6 +15,8 @@ char	*url_fetch(const char *url, const char *post) {
 	CURL	*curl;
 	CURLcode	res;
 	URLData		urld;
+	const	char	*system_key;
+	struct  curl_slist *chunk = NULL;
 
 	urld.data = NULL;
 	urld.s = 0;
@@ -36,7 +38,16 @@ char	*url_fetch(const char *url, const char *post) {
 
 	if (post)
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
-
+	
+	/* The API system may want an actual cookie -- which is a permissions deal */
+	if ((system_key = cfg_read_key("system_key"))) {
+		char	cookie[1024];
+		
+		snprintf(cookie, sizeof cookie - 1, "Cookie: system-session-id=%s", system_key);
+		chunk = curl_slist_append(chunk, cookie);
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+	}
+	
 	res = curl_easy_perform(curl);
 
 	if (res != CURLE_OK)
@@ -45,6 +56,10 @@ char	*url_fetch(const char *url, const char *post) {
 		loge(LOG_DEBUG, "url_fetch: Remote server returned OK");
 
 	curl_easy_cleanup(curl);
+
+	if (chunk)
+		curl_slist_free_all(chunk);
+
 	return urld.data;
 }
 

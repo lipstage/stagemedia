@@ -1,6 +1,8 @@
 #ifndef	__CONFIG_H__
 #define	__CONFIG_H__
 
+#include "version.h"
+
 /*
  * Applies to: Master Mode Only
  *
@@ -42,7 +44,7 @@
 /*** Probably not change these anyway ***/
 #define HTTP_SERVER_NAME	"StageMedia"
 
-#define HTTP_SERVER_VERSION	"0.54"
+#define HTTP_SERVER_VERSION	STAGEMEDIA_VERSION
 
 /* 
  * The maximum one part of the buffer will be transcoded at a time.

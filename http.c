@@ -58,11 +58,21 @@ int	http_fetch_request(pSocket sock, int *method, char *sessionid) {
 			 * All other fields, we DO want a cookie!
 			 */
 				char	*field, *after, *tmp;
+				char	*cstring;
 
 				/* So the big dog doesn't care about sessionid, why should we */
 				if (!sessionid)
 					continue;
 
+				/* The cookie CAN be provided via the URI path in some cases, so we use that as a priority */
+				if ((cstring = strrchr(rq.file_path, '_'))) {
+					cstring++;
+					if (*cstring && strlen(cstring) > 6) {
+						strncpy(sessionid, cstring, 1023);
+						continue;
+					}
+				}
+				
 				/* Looking for colon as the separator at this point */
 				if (!(field = strchr(buffer, ':')))
 					continue;
