@@ -171,6 +171,35 @@ int	read_config(const char *filename, int isboot) {
 void	add_config(pConfig *head, const char *key, const char *value) {
 	pConfig new;
 
+	/* If we are referencing a file */
+	if (!strncmp(value, "@@@", 3)) {
+		const char	*tp = value + 3;
+
+		loge(LOG_DEBUG, "add_config: Referencing external file and proceeding to load that file");
+		if (*tp) {
+			FILE	*lp = fopen(tp, "r");
+			char	buffer[16384];
+
+			/* If we opened the file, attempt to set it to the value */
+			if (lp) {
+				value = fgets(buffer, sizeof buffer - 1, lp);
+				fclose(lp);
+
+				/* log the entry */
+				loge(LOG_DEBUG, "add_config: in reference, setting value for %s to %s", tp, value);
+			} else {
+				loge(LOG_DEBUG, "Was not able to load the file %s, setting the value to NULL - The key will not be loaded!", tp);
+				value = NULL;
+			}
+		}
+	}
+
+	/* We must have a non-NULL value to load the key */
+	if (!value) {
+		loge(LOG_DEBUG, "add_config: The value was null for key ``%s'' - skipping load for key.", key);
+		return;
+	}
+
 	/* This is a key that we won't add UNLESS it is superhead */
 	if (head  && *head != SuperConfigHead) {
 		if (!strcasecmp(key, "__STANZA__"))
