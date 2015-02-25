@@ -312,7 +312,7 @@ void	*ProcessHandler(pThreads s) {
 		MemUnlock();
 			
 		/* Looks like this bus is done */
-		if ((encode_mp3_data(encode, audio, mcopy / 2, SocketPush, s)) < 0) {
+		if ((encode_mp3_data(encode, audio, mcopy / 2, PH_SocketPush, s)) < 0) {
 #ifdef	ALLOCATE_AUDIO_ENCODING_BUFFER
 			/* free the temporary audio buffer */
 			free (audio);
@@ -338,6 +338,17 @@ int	SocketPush(pThreads s, unsigned char *data, int size) {
 	return write(s->sock->fd, data, size);
 }
 
+int	PH_SocketPush(pThreads s, unsigned char *data, int size) {
+	int	nr;
+
+	sock_nonblock(s->sock);
+	nr = write(s->sock->fd, data, size);
+	sock_block(s->sock);
+
+	if (nr < 0 && !WouldBlock(nr)) 
+		return -1;
+	return nr;
+}	
 
 /*
  * Get data from the master server.

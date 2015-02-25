@@ -5,6 +5,7 @@
 
 extern	int	distro_init(void);
 extern	int	SocketPush();
+extern	int	PH_SocketPush();
 extern	void    *ProcessHandler();
 extern	void    *CleanUp();
 extern	void    *GetFromMaster();
