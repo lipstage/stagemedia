@@ -22,7 +22,8 @@ pThreads	new_task(void) {
 	bytes_type_set(temp, BYTES_TYPE_RING);
 
 	/* The maximum size is 1 megabyte */
-	bytes_maxsize_set(temp, 1024*1024);
+	/* reduced to 100k  -kf */
+	bytes_maxsize_set(temp, 1024*100);
 
 	/* Set next to NULL now */
 	p->next = NULL;

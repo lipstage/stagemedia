@@ -102,7 +102,7 @@ pSocket	sock_accept(int fd) {
  * Read data into the socket's buffer
  */
 int	sock_read_into_buffer(pSocket s, int maxsize) {
-	int	si;
+	int	si, errno_tmp = 0;
 	unsigned char	buffer[16384];
 
 	/* The socket/connection is dead -- we can no longer read from it */
@@ -133,7 +133,12 @@ int	sock_read_into_buffer(pSocket s, int maxsize) {
 
 	/* If there is some kind of error... */
 	if ((si < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || si == 0) {
-		s->deadsocket = errno;
+		errno_tmp = errno;
+		if (errno_tmp)
+			s->deadsocket = errno_tmp;
+		else
+			s->deadsocket = 500;
+		
 		return sock_read_into_buffer(s, maxsize);
 	} 
 
