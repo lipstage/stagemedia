@@ -12,6 +12,7 @@ int	pcm_data_push(void *, int);
 void	*MasterServer()
 {
 	int	input;
+	time_t	purge_timeout = 0;
 
 	/* bind to the address and port */
 	input = bind_address(
@@ -34,6 +35,8 @@ void	*MasterServer()
 		/* we have a new connection */
 		if (new) {
 			int begin = !0;
+			time_t	last_recv = time(0);
+			unsigned long int	recv_count = 0;
 
 			/* Just process forever :-) or until the connection dies */
 			for (;;) {
@@ -49,10 +52,10 @@ void	*MasterServer()
 				if (begin && si > 0) {
 					unsigned char potheader[24];
 					int aok;					
-
+			
 					/* copy over the header */
 					memcpy(potheader, data, 24);
-
+			
 					aok = au_head_ok(potheader);
 					if (aok == 1) {
 						memmove(data, &data[3], si - 24);
@@ -69,6 +72,44 @@ void	*MasterServer()
 
 				if (si > 0) {
 					pcm_data_push(data, si);
+#ifdef __HYPER_RATE_LIMIT__
+				if (si > 0) {
+					time_t  tmp_recv;
+                                       	float   recv_rate;
+					int	margin_diff;
+
+					loge(LOG_DEBUG2, "master.MasterServer.si = %d", si);
+					recv_count += si;
+
+					tmp_recv = time(0) - last_recv;
+					if (tmp_recv >= 10) {
+						if (tmp_recv > 10) {
+							margin_diff = tmp_recv - 10;
+							if (margin_diff > 3) {
+								loge(LOG_WARN, "The margin_diff allowance was exceeded -- refusing new data for up to 3 seconds");
+								purge_timeout = time(0) + 3;
+								recv_count = 0;
+								last_recv = time(0);
+								continue;
+							}
+							loge(LOG_INFO, 
+								"Receive data delay exceeded by %d seconds -- calculations will use %d seconds instead!", margin_diff, 10);
+							//tmp_recv = 10;
+						}
+						recv_rate = (((float)recv_count) / ((float)tmp_recv));
+						loge(LOG_DEBUG2,
+							"Current master recv rate = %f, total_count = %d, diff_seconds = %d", recv_rate, recv_count, tmp_recv);
+						recv_count = 0;
+						last_recv = time(0);
+						if (recv_rate > 3500) {
+							loge(LOG_WARN, "Receive rate exceeded.  Purging all data (denying new data) for 10 seconds");
+							purge_timeout = time(0) + 10;
+						}
+					}
+					if (purge_timeout < time(0)) {
+						pcm_data_push(data, si);
+					}
+#endif
 				} else if (si < 0) {
 					sock_close(new);
 					break;
@@ -88,20 +129,9 @@ int	pcm_data_push(void *data, int length) {
 	MemLock();
 	
 	for (scan = AllThreadsHead; scan; scan = scan->next) {
-//		void	*temp;
-
 		if (!IsStatusStream(scan))
 			continue;
 		scan->rbuf = bytes_append(scan->rbuf, data, length);
-/*
-		if (!(temp = realloc(scan->rdb.buf, scan->rdb.si + length))) {
-			// handle this later
-		}
-		if (temp != scan->rdb.buf)
-			scan->rdb.buf = temp;
-		memcpy( &((unsigned char *)scan->rdb.buf)[scan->rdb.si], ((unsigned char *)data), length);
-		scan->rdb.si += length;
-*/
 	}
 	
 	MemUnlock();

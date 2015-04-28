@@ -403,16 +403,24 @@ void *GetFromMaster() {
 				int	mys, appx, delta;
 
 				/* attempt to read the data directly from the socket */
-				if ((count = read(m->fd, buffer, sizeof buffer - 1)) > 0) {
+				count = read(m->fd, buffer, sizeof buffer -1);
+
+				//loge(LOG_DEBUG2, "Ret: %d %d", count, errno);
+
+				/* conditionals */
+				if (count > 0) {
 					/* successful?  add it to the buffer! */
 					MemLock();
 					input_buffer = bytes_append(input_buffer, buffer, count);
 					MemUnlock();
-				} else if(count < 0) {
+				} else if(count <= 0) {
 					/* The socket was "just busy" -- we don't do anything here */
-					if(errno == EAGAIN || errno == EWOULDBLOCK) {
+					if(count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
 						; /* do nothing at all :) */
 					} else {
+						/* Log the event */
+						loge(LOG_ERR, "Master server socket appears to be dead, issuing a stand-off/disconnect");
+
 						/* ut oh, it is dead, wtf */
 						/* close the socket */
 						sock_close(m);
@@ -426,7 +434,7 @@ void *GetFromMaster() {
 						/* now leave, we should automatically try to reconnect */
 						break;
 					}			
-				}
+				} 
 
 				if ((bytes_size(input_buffer) > min_buffer) && !execone) {
 					ms_diff_init(&diff);
