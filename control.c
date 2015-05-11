@@ -6,14 +6,16 @@
  * The first 1k of the stream is the "Primer" and contains, at least,
  * the following information:
  *
- * 4 byte: STcD - Magic for the stream, always STcM
+ * 4 byte: STcM - Magic for the stream, always STcM
  * 1 byte: Version - Next byte is the version (currently only supports 1)
  * 2 byte: Server ID
  * REMAIN: 0 padding
  */
-int	Ctrl_Primer(unsigned short int id, char *buffer, size_t s) {
+int	Ctrl_Primer(unsigned short int id, char *buffer, size_t s, const char *server_password, char *salt) {
 	/* primer is always 1k in length */
 	unsigned char	data[1024] = { 0 };
+	unsigned short options = 0;
+	const	char	*quality;
 
 	/* Copy over the magic for the primer */
 	memcpy(data, "STcM", 4);
@@ -21,8 +23,32 @@ int	Ctrl_Primer(unsigned short int id, char *buffer, size_t s) {
 	/* Version is always 1 (right now) */
 	data[4] = 1;
 
+	/* We are going to use a server_password and should do something here */
+	if (server_password) {
+		/* no real effect, just for logic's sake really -- set the password required */
+		options |= (1 << 0);
+
+		/* create a random string */
+		random_string(salt, 8);
+
+		/* copy over the salt, too */
+		memcpy(&data[7], salt, 8);
+	}
+
+	/* compression is always off for now */
+	options |= (0 << 1);
+
+	quality = cfg_read_key_df("quality", DEFAULT_QUALITY);
+	if (!strcasecmp(quality, "good")) 
+		options |= (QUALITY_GOOD << 2);
+	else /* acceptable */
+		options |= (QUALITY_ACCEPTABLE << 2);
+
+	/* copy over the options */
+	memcpy(&data[5], &options, sizeof options);
+
 	/* Copy over the id of our server */
-	memcpy(&data[5], &id, sizeof id);
+	memcpy(&data[15], &id, sizeof id);
 
 	if (s < 1024)
 		return 0;
@@ -34,15 +60,30 @@ int	Ctrl_Primer(unsigned short int id, char *buffer, size_t s) {
 	return 1024;
 }
 
-int	Ctrl_UnPrime(unsigned char *buffer) {
+int	Ctrl_UnPrime(unsigned char *buffer, pCtrlPrimerHeader ctrl_header) {
 	short int	val;
+	unsigned short int		options;
 
 	if (buffer[0] == 'S' && buffer[1] == 'T' && buffer[2] == 'c' && buffer[3] == 'M') {
 		if (buffer[4] != 1) {
 			loge(LOG_ERR, "Ctrl_UnPrime: Unknown version received from primer");
 			return -1;
 		}
-		val = *((unsigned short int *)&buffer[5]);
+		val = buffer[4];
+
+		ctrl_header->version = val;
+		options = *(unsigned short int *)&buffer[5];
+		ctrl_header->password_protected = options & 1;
+		ctrl_header->compression_enabled = options & 2;
+		ctrl_header->quality = (options >> 2) & 15;
+
+		/* Either way, we zero the salt out */
+		memset(ctrl_header->salt, 0, sizeof ctrl_header->salt);
+
+		/* Only perform the copy if it is set to happen */
+		if (ctrl_header->password_protected)
+			memcpy(ctrl_header->salt, &buffer[7], 8);
+
 		return val;
 	}
 	return -1;

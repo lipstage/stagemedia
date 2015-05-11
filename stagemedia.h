@@ -152,4 +152,6 @@ extern	char	*strupper(char *);
 
 extern	char	*trim(char *);
 
+extern	char	*random_string(char *, int);
+
 #endif /* __SLINGMEDIA_H__ */

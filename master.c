@@ -149,11 +149,12 @@ int	pcm_data_push(void *data, int length) {
  */
 int	au_head_ok(const unsigned char *p) {
 	AUFormat	au;
+	const	char	*quality;
 
 	au.magic = *(int *)&p[0];
 
 	/* expect .snd in big endian */
-	//if (au.magic == 0x2e736e64) {
+	/* if (au.magic == 0x2e736e64) { This is little endian and is only here to show what that looks like */
 	if (au.magic == 0x646e732e) {
 		au.data_offset = ENDIANSWAP( *((int *)&p[4]) );
 		au.data_size = ENDIANSWAP( *(int *)&p[8] );
@@ -162,8 +163,15 @@ int	au_head_ok(const unsigned char *p) {
 		au.channels = ENDIANSWAP( *(int *)&p[20] );
 
 		//printf("channels = %d, encoding = %d, sample_rate = %d\n", au.channels, au.encoding, au.sample_rate);	
-		if (au.channels == 1 && au.encoding == 3 && au.sample_rate == 22050)
-			return 1;
+		
+		quality = cfg_read_key_df("quality", DEFAULT_QUALITY);
+		if (!strcasecmp(quality, "good")) {
+			if (au.channels == 1 && au.encoding == 3 && au.sample_rate == 44100)
+				return 1;
+		} else {
+			if (au.channels == 1 && au.encoding == 3 && au.sample_rate == 22050)
+				return 1;
+		}
 		return -1;
 	}
 	return 0;

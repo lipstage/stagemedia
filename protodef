@@ -1,0 +1,46 @@
+When client connects, server will respond with 1k (1,024 bytes) of data, in the following format:
+
+	4 byte: STcM - Magic for the stream, always STcM
+	1 byte: Version - Next byte is the version (currently only supports 1)
+	2 byte: Options field, as follows:
+		bit 0: Password protected
+		bit 1: Compression enabled, gzip
+		bit 2-6: Stream quality, always PCM in verson 1
+			0: Acceptable quality- PCM 16-bit, 22050, mono 
+			1: Good quality- PCM 16-bit, 44100, mono
+			2: Very good quality- PCM 16-bit, 44100, stereo
+			* All other values not used
+		* All other bits reserved for future use.
+	8 byte: If password is used, a salt is generated. The client (distro) is expected to perform 
+		MD5(password + salt) [concatenate] and respond.
+	4 byte: Channel Identifier. This may be used for distros to connect back to the API.
+
+	REMAIN: 0 padding
+
+The client is expected to then respond with a 1k payload back to the server, as follows:
+	
+	4 byte: STcM - Magic for stream, always STcM
+	2 byte: 'OK' or 'NO'
+		If the distro states 'OK' then the streaming methods are acceptable. If it
+		says 'NO' it should then disconnect.
+	32 bytes: If password bit was set to 0, then the distro should give back the MD5 of 
+		password and salt.
+
+After this, streaming begins. Each part of the stream is sent in 'frames' which are delimited as
+follows:
+
+	byte 1:
+		bits 5-8: set to 1101, always
+		bits 0-4: Payload type
+			0: Standard audio transmission
+			1: Control
+	bytes 2 & 3: The size of the frame in bytes. Does *NOT* include frame header size!
+	* Payload, for standard audio, this is just the PCM data
+
+Should a control occur above, it will be as follows:
+
+	byte 1: Control Statement
+		bit 0: Roll commercial
+
+	* all others not currently used.	
+		

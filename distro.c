@@ -95,6 +95,7 @@ void	*ProcessHandler(pThreads s) {
 	int	method = 0;
 	int	init_stream = 0;	/* used locally to indicate we've started a stream */
 	int	max_stream_time = cfg_read_key("max_stream_time") ? atoi(cfg_read_key("max_stream_time")) : MAX_STREAM_TIME;
+	const char	*quality = cfg_read_key_df("quality", DEFAULT_QUALITY);
 	/* time_t	st_time = time(0); */
 	char	sessionid[1024];
 
@@ -108,12 +109,19 @@ void	*ProcessHandler(pThreads s) {
 	loge(LOG_DEBUG, "(fd: %d, %s:%s) Client connected and distribution thread kicked off at %lu epoch",
 		s->sock->fd, s->sock->ip_addr_string, s->sock->port_string, s->connect_epoch);
 
-	/* set up au */
-	au.channels = 1;
-        au.data_offset = -1;
-        au.data_size = -1;
-        au.encoding = 3;
-        au.sample_rate = 22050;
+	if (!strcasecmp(quality, "good")) {
+		au.channels = 1;
+		au.data_offset = -1;
+		au.data_size = -1;
+		au.encoding = 3;
+		au.sample_rate = 44100;
+	} else {
+		au.channels = 1;
+	        au.data_offset = -1;
+		au.data_size = -1;
+		au.encoding = 3;
+		au.sample_rate = 22050;
+	}
 
 	/* Tell other processes that we're starting off */
 	SetStatus_Begin(s);
@@ -240,7 +248,7 @@ void	*ProcessHandler(pThreads s) {
 		/*
 		 * If there are no bytes to read, then we proceed
 		 * to wait 50ms, then restart our loop.  We do this
-		 * until their are bytes
+		 * until there are bytes
 		 */
 		if (!bytes_ready(s->rbuf)) {
 			/* Unlock the memory area -- allow someone else to use it */
@@ -360,9 +368,16 @@ void *GetFromMaster() {
 	unsigned	char	buffer[65535];
 	pBytes		input_buffer = NULL;
 	int		execone = 0;
-	int		min_buffer = trans_buf_min(5, 1, 22050, 2);
+	int		min_buffer;
 			/* 5 second buffering time, 1 channel, 22050 samples/sec and 2 bytes (16-bit) per sample */
+			/* Modified: quality will change this behavior!! */
 	MSDiff		diff;
+	CtrlPrimerHeader	primer;
+	int		samplerate = 22050;		/* the "default" sampling rate */
+
+
+	/* Set the minimum buffer -- to the default (could be over-ridden later) */
+	min_buffer = trans_buf_min(5, 1, samplerate, 2);
 
 	/* 0 the diff variable */
 	memset(&diff, 0, sizeof diff);
@@ -388,13 +403,27 @@ void *GetFromMaster() {
 				continue;
 			}
 
-			if (Ctrl_UnPrime(buffer) != 1) {
+			if (Ctrl_UnPrime(buffer, &primer) != 1) {
 				loge(LOG_, "The primer received from the master server is a mismatch; it was not expected.  Waiting 60 seconds and will retry.");
 				sock_close(m);
 				mypause_time(1000 * 60);
 				continue;
 			}
 			
+			/* 
+			** add the configuration for QUALITY to superhead
+			** WARNING: If you change the quality on master, you HAVE to restart the distro server until
+			** the functionality of remove from superhead is added
+			*/
+			if (primer.quality == QUALITY_GOOD) {
+				/* one day: superhead_config_del("quality"); */
+				superhead_config_add("quality", "good");
+
+				/* need to update the minimum buffer and sample rate */
+				samplerate = 44100;
+				min_buffer = trans_buf_min(5, 1, samplerate, 2);
+			} 
+
 			sock_nonblock(m);
 
 			execone = 0;
@@ -405,7 +434,7 @@ void *GetFromMaster() {
 				/* attempt to read the data directly from the socket */
 				count = read(m->fd, buffer, sizeof buffer -1);
 
-				//loge(LOG_DEBUG2, "Ret: %d %d", count, errno);
+				loge(LOG_DEBUG2, "Received %d bytes from master read, with errno=%d", count, errno);
 
 				/* conditionals */
 				if (count > 0) {
@@ -460,7 +489,7 @@ void *GetFromMaster() {
 				}
 
 				/* Get the size to copy */
-				appx = trans_quot(delta, 1, 22050, 2);
+				appx = trans_quot(delta, 1, samplerate, 2);
 
 				/* Do not overflow the buffer :) */
 				if (appx > sizeof lbuf)
