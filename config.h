@@ -47,10 +47,10 @@
 #define HTTP_SERVER_VERSION	STAGEMEDIA_VERSION
 
 /* 
- * The maximum one part of the buffer will be transcoded at a time.
+ * The maximum one part of the buffer that will be transcoded at a time.
  * This keeps calls to calloc() which request larger sums of memory low
  */
-#define	MAX_TRANSCODE_CLIP_SIZE		1024*32
+#define	MAX_TRANSCODE_CLIP_SIZE		1024*64
 
 /*
  * If you enable this, it will use calloc()/malloc() to create a reserve
@@ -113,5 +113,16 @@
 
 #define	DISTRO_CONNECT_IP		"127.0.0.1"
 #define	DISTRO_CONNECT_PORT		18001
+
+/*
+ * The compiled "default" quality
+ *
+ * use 'quality' in configuration to override
+ *  - acceptable: PCM 16-bit, mono, 22050
+ *  - good: PCM 16-bit, mono, 44100
+ *  - verygood: PCM 16-bit, stero, 4410 (NOT SUPPORTED YET)
+ */
+#define	DEFAULT_QUALITY	"acceptable"
+
 
 #endif

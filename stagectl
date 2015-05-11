@@ -1,0 +1,408 @@
+#!/bin/bash
+
+installdir=/home/keithf/stagemedia
+conf=${installdir}/stagemedia.conf
+bin=${installdir}/stagemediad
+stop_wait_timeout=900
+
+function check_startup() {
+	do_exit=0
+	if [ ! -f ${conf} ];
+	then
+		echo "Configuration file not found";
+		do_exit=1;
+	fi
+	
+	if [ ! -f ${bin} ] || [ ! -x ${bin} ];
+	then
+		echo "Binary either not found or not executable";
+		do_exit=1;
+	fi
+
+	[ $do_exit -gt 0 ] && exit 1;
+}
+
+#
+# List all stanzas as found in the configuration file
+#
+function get_stanzas() {
+	egrep '^<[a-z]' ${conf}|tr -d "><";
+}
+
+function get_stanza_config() {
+	sed '/^<'${1}'>/,/^<\/'${1}'>$/!d;//d' stagemedia.conf|egrep -v '^#'
+}
+
+function stanza_config_param() {
+	stanza_name="${1}"
+	param="${2}"
+	for entry in $(get_stanza_config "${stanza_name}");
+	do
+		akey=$(echo "$entry" | awk -F'=' '{print $1}');
+		avalue=$(echo "$entry" | awk -F'=' '{print $2}');
+		if [ "${akey}" = "${param}" ]; 
+		then
+			echo "${avalue}";
+			return 0
+		fi
+	done
+	echo ""
+	return 1;
+}
+
+function stanza_getpid() {
+	if [ ! -z "$1" ]; 
+	then
+		pids=$(ps xuaw | egrep 'stagemediad.*-s.*'${1}'$' | grep -v grep | awk '{print $2}' | egrep '[0-9]')
+		echo ${pids}
+	fi
+}
+
+#
+# List only the stanzas not found to be running or not-running
+# depending on first flag
+#
+function stanzas_proc_state() {
+	flag_running=0
+
+	if [ ! -z "$1" ]; 
+	then
+		if [ "$1" = "running" ];
+		then
+			flag_running=1;
+		fi
+	fi
+
+	for stanza in $(get_stanzas);
+	do
+		#stanza_getpid ${stanza}
+		#isrun=$(ps xuaw | egrep 'stagemediad.*-s.*'${stanza} | grep -v grep -c);
+		isrun=$(stanza_getpid ${stanza});
+		if [ $flag_running -eq 0 ];
+		then
+			if [ -z "${isrun}" ];
+			then
+				echo ${stanza}
+			fi
+		else
+			if [ ! -z "${isrun}" ]; 
+			then
+				echo ${stanza}
+			fi
+		fi
+	done
+}
+
+#
+# Get stanzas which are currently running
+#
+function stanzas_running() {
+	stanzas_proc_state "running"
+}
+
+#
+# Get stanzas which are not currently running
+#
+function stanzas_not_running() {
+	stanzas_proc_state "not_running"
+}
+
+#
+# Check if a stanza is in the stanza list
+#
+function stanza_in_config() {
+	for stanza in $(get_stanzas);
+	do
+		if [ "$1" = "${stanza}" ]; 
+		then
+			return 0
+		fi
+	done
+	return 1
+}
+
+#
+# Check if a particular stanza is currently running
+#
+function stanza_is_running() {
+	for stanza in $(stanzas_running);
+	do
+		if [ "$1" = "${stanza}" ];
+		then
+			return 0
+		fi
+	done
+	return 1
+}
+
+#
+# Check if a particular stanza is currently NOT running
+#
+function stanza_not_running() {
+	for stanza in $(stanzas_not_running);
+	do
+		if [ "$1" = "${stanza}" ];
+		then
+			return 0;
+		fi
+	done
+	return 1
+}
+
+#########
+#
+# Start a specific stanza
+#
+# stscript stanza-start blah
+#
+function stanza_start() {
+	stanza="${1}";
+	if $(stanza_not_running "${stanza}"); 
+	then
+		if ! $(stanza_in_config "${stanza}"); 
+		then
+			echo "Stanza ${stanza} is not configured.";
+			return 1
+		fi
+		${bin} -s ${stanza} >/dev/null
+		sleep 5;
+		stanza_is_running ${stanza} && echo "${stanza} is now running successfully" && return 0;
+		echo "${stanza} failed to start properly or cannot locate in process list" && return 1;
+	else
+		echo "Stanza ${1} already running with pid "$(stanza_getpid "${1}");
+		return 1
+	fi
+}
+
+function stanza_stop() {
+	do_force=0
+	if [ ! -z "$3" ] && [ "$3" = "force" ]; 
+	then
+		do_force=1
+	fi
+
+	if $(stanza_is_running "${1}");
+	then
+		for pid in $(stanza_getpid "${1}");
+		do
+			if [ $do_force -eq 0 ];
+			then
+				echo "Sending SIGTERM to ${1}:${pid}";
+				kill -TERM ${pid};
+			else
+				echo "Sending SIGKILL to ${1}:${pid}";
+				kill -KILL ${pid}
+			fi
+		done
+	else
+		echo "Stanza ${1} is not currently running, cannot stop.";
+		return 1;
+	fi
+}
+
+#
+# This issues a SIGTERM to all the stanzas we have in the list.
+# It then waits a timeout period and issues a force (SIGKILL)
+# It feels kinda dirty, but whatever.  Stop judging...
+#
+function stanza_stop_and_wait() {
+	start_time=$(date +%s);
+
+	# Issue an immediate "die now" please, thanks
+	for stanza in ${1};
+	do
+		stanza_stop ${stanza} "stop" "do-not-force"
+	done
+
+	stanza_list="${1}"
+
+	# A hard-coded 10 second wait time.
+	sleep 10;
+
+	# 
+	# Keep looping until we finally reach our timeout period.  When we do, we'll force quit the remaining
+	# stanzas.  The others should already be shut down by that point.
+	#
+	while true; 
+	do
+		has_running=0
+		new_stanza_list=""
+		for stanza in ${stanza_list};
+		do
+			pid=$(stanza_getpid "${stanza}")
+			if [ ! -z "$pid" ]; then
+				has_running=1;
+				[ -z "${new_stanza_list}" ] && new_stanza_list="${stanza}" || new_stanza_list="${new_stanza_list} ${stanza}"
+			fi;
+		done
+		
+		if [ $has_running -ne 0 ];
+		then
+			stanza_list="${new_stanza_list}";
+
+			diff_time=$(($(date +%s) - $start_time));
+			if [ $diff_time -gt ${stop_wait_timeout} ];
+			then
+				echo "Timed out waiting for processes to terminate gracefully.";
+				for stanza in ${stanza_list};
+				do
+					stanza_stop ${stanza} "stop" "force"
+				done;
+				return 0
+			fi;
+		else
+			break;
+		fi;
+		sleep 5;
+	done
+
+	return 0;
+}
+
+function stanza_reload() {
+	if $(stanza_not_running "${1}");
+	then
+		echo "Stanza ${1} is not currently running.";
+		return 1;
+	fi
+
+	for pid in $(stanza_getpid "${1}");
+	do
+		echo "Sending SIGHUP to ${1}:${pid}";
+	done
+	return 0
+}
+
+
+function all_stanza_action() {
+	action="$1"
+
+	if [ "$action" = "stop" ]; 
+	then
+		stanza_stop_and_wait "$(get_stanzas)";
+		return 0	
+	fi
+
+	for stanza in $(get_stanzas); 
+	do
+		[ "$action" = "reload" ] && stanza_reload "${stanza}";
+		[ "$action" = "start" ] && stanza_start "${stanza}";
+	done
+}
+
+# stscript stanza-start blah
+# stscript stanza-stop blah
+# stscript stanza-reload blah
+# stscript stanza-list
+# stscript stanza-show-running
+# stscript stanza-show-stopped
+# stscript stanza-tail-log blah
+# stscript stanza-show-config blah
+# stscript stanza-show-param blah param
+# stscript stop
+# stscript reload
+# stscript start
+
+#if $(stanza_not_running "mytest"); then
+#	echo "Yay"
+#fi
+
+#stanza_reload "master_server"
+#all_stanza_action "stop"
+#get_stanza_config "master_server"
+
+#logfile=$(stanza_config_param "master_server" "log_file");
+#if [ ! -z "$logfile" ] && [ -f "$logfile" ];
+#then
+#	tailf $logfile;
+#else
+#	echo "Log file not found"
+#fi
+
+
+
+########
+if [ ! -n "$1" ]; 
+then
+ echo "$0 (start|stop|restart|reload)"
+ echo "Extended Options:"
+ echo "stanza-start:         start a specific stanza, such as master_server";
+ echo "stanza-stop:          stop a specific stanza";
+ echo "stanza-restart:       restart a specific stanza server";
+ echo "stanza-reload:        send a specific server on a given stanza a SIGHUP";
+ echo "stanza-list:          list all known stanzas in configuration";
+ echo "stanza-show-running:  show all known, running stanzas";
+ echo "stanza-show-stopped:  show the configured, but stopped stanzas";
+ echo "stanza-show-config:   dump the configuration for a given stanza";
+ echo "stanza-show-param:    echo/print a given parameter on a specific stanza";
+ echo "stanza-tail-log:      tail the log for a specific stanza";
+ exit 0;
+fi
+
+# Run the call to check the startup stuff
+check_startup
+
+case "${1}" in
+	start*)
+		all_stanza_action "start" "$(get_stanzas)"
+	;;
+	stop*)
+		all_stanza_action "stop" "$(get_stanzas)"
+	;;
+	stanza-start*)
+		[ $# -lt 2 ] && echo "$0 stanza-start <stanza_name>" && exit 1;
+		all_stanza_action "start" "${2}"
+	;;
+	stanza-stop*)
+		[ $# -lt 2 ] &&	echo "$0 stanza-stop <stanza_name>" && exit 1;
+		stanza_stop_and_wait "${2}"
+	;;
+	stanza-restart*)
+		[ $# -lt 2 ] &&	echo "$0 stanza-restart <stanza_name>" && exit 1;
+		stanza_stop_and_wait "${2}";
+		sleep 5;
+		stanza_start "${2}";
+		exit 0;
+	;;
+	stanza-list*)
+		get_stanzas;
+		exit 0;
+	;;
+	stanza-show-running*)
+		stanzas_running;
+	;;
+	stanza-show-stopped*)
+		stanzas_not_running;
+	;;
+	stanza-show-config*)
+		[ ! -n "${2}" ] && echo "$0 stanza-show-config <stanza_name>" && exit 1;
+		get_stanza_config "${2}"		
+	;;
+	stanza-show-param*)
+		if [ $# -lt 3 ];
+		then 
+			echo "$0 stanza-show-param <stanza_name> <param_name>";
+			exit 1;
+		fi
+		stanza_config_param "${2}" "${3}"
+	;;
+	stanza-tail-log*)
+		[ $# -lt 2 ] && echo "$0 stanza-tail-log <stanza_name>" && exit 1;
+		logfile=$(stanza_config_param "${2}" "log_file");
+		if [ ! -z "$logfile" ] && [ -f "$logfile" ];
+		then
+			echo $logfile
+			tail -f $logfile;
+			exit $?;
+		else
+			echo "Unable to find log file"
+			exit 1;
+		fi
+	;;
+	*)
+		echo "Unknown, unconfigured, unimplemented, or bad option ${1}";
+		exit 1;
+	;;
+esac;
+
+

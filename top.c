@@ -208,12 +208,14 @@ int	main(int argc, char **argv) {
 void	*DistHandler(pThreads s) {
 	int	n = 0, count = 0;
 	char	primer[1024];
+	const 	char	*server_password = cfg_read_key("server_password");
+	char	salt[9] = { 0 };
 
 	/* This is where we'll put our primer! */
 	memset(primer, 0, sizeof primer);
 
 	/* Set up the primer */
-	Ctrl_Primer(1, primer, sizeof primer);
+	Ctrl_Primer(1, primer, sizeof primer, server_password, salt);
 
 	/* Write it out -- now */
 	write(s->sock->fd, primer, sizeof primer);

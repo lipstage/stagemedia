@@ -82,3 +82,24 @@ char *trim(char *s) {
 	
 	return s;
 }
+
+/*
+ * Create a random string
+ */
+static int random_string_srand_init;
+char *random_string(char *str, int s) {
+	int	iter;
+
+	/* if we haven't seeded the random number generator, do so */
+	if (!random_string_srand_init) {
+		srand(time(0) + getpid());
+		random_string_srand_init++;
+	}
+
+	/* write out the random string */
+	for (iter = 0; iter < s; iter++) {
+		str[iter] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[(rand() % 62)];
+		str[iter+1] = '\0';
+	}
+	return str;
+}
