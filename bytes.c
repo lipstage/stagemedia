@@ -10,6 +10,9 @@ pBytes	bytes_init(void) {
 	new->s = 0;
 	new->type = BYTES_TYPE_DEFAULT;
 	new->max_size = 0;	
+#ifdef BYTES_MUTEX
+	pthread_mutex_init(&new->lock, NULL);
+#endif
 
 	return (new);
 }
@@ -73,6 +76,23 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 				/* now, we simply allow it to "fall through", which should more or less autocorrect */
 			}
 
+#ifdef	BYTES_APPEND_USE_REALLOC
+			/*
+			 * Attempt to allocate the new size, which should be larger :)
+			 */
+			if ((temp = realloc(out->d, newsize)) != NULL) {
+				/* If it isn't NULL, it should be safe to just set it */
+				out->d = temp;
+				
+				/* Append our data to the end of what's already there */
+				memmove( &((char *)out->d)[out->s], (char *) data, size);
+
+				/* And we have a new size */
+				out->s = newsize;
+			} else
+				return in;
+
+#else
 			/* 
 			 * We just allocate an entirely new area instead of using realloc(). 
 			 * If this should fail, then return back the 'in' pointer -- if we
@@ -98,6 +118,7 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 				out->d = temp;
 			} else
 				return in;
+#endif
 		}
 	} else {
 		/*
@@ -192,6 +213,21 @@ int	bytes_squash(pBytes in, int n) {
 		return 0;
 	}
 
+#ifdef BYTES_SQUASH_USE_REALLOC	
+	/* move the data backwards */
+	memmove (in->d, &((unsigned char *)in->d)[n], newsize);
+
+	/* attempt to strink the memory area */
+	if ((temp = realloc(in->d, newsize)) != NULL) {
+		/* Just set it to the new location */
+		in->d = temp;
+
+		/* Set the new size */
+		in->s = newsize;
+
+		return 0; /* success */
+	}
+#else
 	/* allocate new memory area -- yes, we could have used realloc, but whatevs */
 	if ((temp = calloc(1, newsize))) {
 
@@ -207,6 +243,7 @@ int	bytes_squash(pBytes in, int n) {
 
 		return 0;	/* success */
 	}
+#endif
 	return -1;
 }
 
@@ -221,11 +258,18 @@ void	bytes_free(pBytes in) {
 		in->s = 0;
 		
 		free (in);
+#ifdef BYTES_MUTEX
+		pthread_mutex_destroy(&new->lock);
+#endif
 		return;
 	}
 
-	if (in)
+	if (in) {
+#ifdef BYTES_MUTEX
+		phthread_mutex_destroy(&new->lock);
+#endif
 		free(in);
+	}
 }
 
 /*
@@ -260,3 +304,22 @@ void	bytes_maxsize_set(pBytes in, int n) {
 	if (in)
 		in->max_size = n;
 }
+
+#ifdef BYTES_MUTEX
+int	bytes_lockop(pBytes p, int amlocking) {
+	if (amlocking) {
+		pthread_mutex_lock(&p->lock);
+	} else {
+		pthread_mutex_unlock(&p->lock);
+	}
+	return 0;
+}
+
+int	bytes_lock(pBytes p) {
+	return bytes_locking(p, 1);
+}
+
+int	bytes_unlock(pBytes p) {
+	return bytes_locking(p, 0);
+}
+#endif

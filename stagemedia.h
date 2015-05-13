@@ -37,6 +37,7 @@
 #include "signal.h"
 #include "config.h"
 #include "version.h"
+#include "def.h"
 
 #ifdef	SUPPORT_MP3
 # include  <lame/lame.h>
