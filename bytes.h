@@ -13,6 +13,9 @@ typedef	struct st_bytes {
 	int	s;			/* size of the buffer itself */
 	int	type;			/* options for the Bytes buffer */
 	int	max_size;		/* The maximum size permitted to grow.  The behavior depends a bit on mode */
+#ifdef BYTES_MUTEX
+	pthread_mutex_t	lock;
+#endif
 } Bytes, *pBytes;
 
 extern 	pBytes	bytes_init(void);

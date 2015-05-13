@@ -434,7 +434,7 @@ void *GetFromMaster() {
 				/* attempt to read the data directly from the socket */
 				count = read(m->fd, buffer, sizeof buffer -1);
 
-				loge(LOG_DEBUG2, "Received %d bytes from master read, with errno=%d", count, errno);
+				/* loge(LOG_DEBUG2, "Received %d bytes from master read, with errno=%d", count, errno); */
 
 				/* conditionals */
 				if (count > 0) {
@@ -470,7 +470,8 @@ void *GetFromMaster() {
 					ms_diff_set_difference(&diff, 100);
 					execone = !0;
 					continue;
-				} else {
+				/* } else { */
+				} else if (!execone) {
 					mypause_fd(m->fd, 100);
 				}
 
