@@ -57,6 +57,9 @@ typedef struct	st_Threads {
 	int		ad_inject;
 
 	char	sessionid[256];
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+	int	flashback;
+#endif
 } *pThreads, Threads;
 
 extern	pThreads	AllThreadsHead;
