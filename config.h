@@ -18,8 +18,24 @@
  *
  * The maximum size of a client's buffer.  Once this size is reached, no PCM data will be
  * "pushed" to the client.  
+ *
+ * NOTE: This is an ABSOLUTE setting and will RARELY be reached; remember, BYTES_MAXSIZE_PER_USER
+ * applies.
  */
 #define	CLIENT_MAX_BUFSIZE	(1024*1024*4)
+
+/*
+ * Applies to: Distribution Server
+ *
+ * This is the "MAXIMUM" size of the ring buffer for each user, concerning PCM data.
+ * This MUST be large enough to hold a fairly sizable amount of data. Namely, if you 
+ * enable INIT_BURST_ON_CONNECT (def.h, maybe moved later), it needs to be sizable
+ * enough to hold "3" seconds of audio in PCM format.
+ *
+ * BE CAREFUL WITH THIS SETTING. TOO LOW AND THE USER MAY NOT STREAM ANYTHING AT ALL.
+ */
+#define	BYTES_MAXSIZE_PER_USER	(1024*768)
+
 
 /*
  * The maximum number of distribution servers which can be connected to the master

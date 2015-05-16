@@ -39,6 +39,9 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 	if (in) {
 		out = in;
 
+#ifdef BYTES_MUTEX
+		bytes_lock(in);
+#endif
 		/*
 		 * This is the first time we've inserted any data into this buffer.
 		 * Actually, we do NOT take ring into account in this case.
@@ -48,6 +51,9 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 				return NULL;
 			memcpy(out->d, data, size);
 			out->s = size;
+#ifdef BYTES_MUTEX
+			bytes_unlock(out);
+#endif
 			return out;
 		} else {
 			void 	*temp;
@@ -89,9 +95,12 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 
 				/* And we have a new size */
 				out->s = newsize;
-			} else
+			} else {
+#ifdef BYTES_MUTEX
+				bytes_unlock(in);
+#endif
 				return in;
-
+			}
 #else
 			/* 
 			 * We just allocate an entirely new area instead of using realloc(). 
@@ -116,14 +125,21 @@ pBytes	bytes_append(pBytes in, void *data, int size) {
 				/* update our size and location of the new memory areas! */
 				out->s = newsize;
 				out->d = temp;
-			} else
+			} else {
+#ifdef BYTES_MUTEX
+				bytes_unlock(in);
+#endif
 				return in;
+			}
 #endif
 		}
+#ifdef BYTES_MUTEX
+		bytes_unlock(in);
+#endif
 	} else {
 		/*
 		 * If our 'in' pointer was NULL, then we allocate enough memory to hold it.
-		 * After that, we just re-run outselves with the in pointer as the first argument.
+		 * After that, we just re-run ourselves with the in pointer as the first argument.
 		 * In that case, it should just append it.
 		 */
 		if ((out = calloc(1, sizeof(*out)))) {

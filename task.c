@@ -23,7 +23,8 @@ pThreads	new_task(void) {
 
 	/* The maximum size is 1 megabyte */
 	/* reduced to 100k  -kf */
-	bytes_maxsize_set(temp, 1024*100);
+	/* moved to a #define in config.h -kf */
+	bytes_maxsize_set(temp, BYTES_MAXSIZE_PER_USER);
 
 	/* Set next to NULL now */
 	p->next = NULL;
@@ -31,6 +32,9 @@ pThreads	new_task(void) {
 	/* Set the values to NULL and zero */
 	p->wrb.buf = p->rdb.buf = NULL;
 	p->wrb.si = p->rdb.si = 0;
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+	p->flashback = 0;
+#endif
 
 	/* Need exclusive access */
 	//MemLock();

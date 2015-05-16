@@ -98,6 +98,9 @@ void	*ProcessHandler(pThreads s) {
 	const char	*quality = cfg_read_key_df("quality", DEFAULT_QUALITY);
 	/* time_t	st_time = time(0); */
 	char	sessionid[1024];
+#ifdef INIT_BURST_ON_CONNECT
+	int	min_buffer;
+#endif
 
 	/* set the connect time, NOW */
 	s->connect_epoch = time(0);
@@ -226,6 +229,10 @@ void	*ProcessHandler(pThreads s) {
 	/* update the time for last 'big' change again */
 	s->last = time(0);
 
+#ifdef	INIT_BURST_ON_CONNECT
+	min_buffer = trans_buf_min(3, 1, au.sample_rate, 2);
+#endif
+
 	/* Get the encoder ready son */
 	encode = encode_mp3_init(au);
 
@@ -250,7 +257,12 @@ void	*ProcessHandler(pThreads s) {
 		 * to wait 50ms, then restart our loop.  We do this
 		 * until there are bytes
 		 */
+		
+#ifdef INIT_BURST_ON_CONNECT
+		if (!bytes_ready(s->rbuf) || bytes_size(s->rbuf) < min_buffer) {
+#else
 		if (!bytes_ready(s->rbuf)) {
+#endif
 			/* Unlock the memory area -- allow someone else to use it */
 			MemUnlock();
 
@@ -274,6 +286,14 @@ void	*ProcessHandler(pThreads s) {
 			continue;
 		}
 
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+		MemLock();
+
+		/* well, we don't need anything now */
+		s->flashback = 1;
+
+		MemUnlock();
+#endif
 		/* internally mark that we've received data */
 		init_stream = 1;
 
@@ -328,6 +348,10 @@ void	*ProcessHandler(pThreads s) {
 			/* We are going to close the encoder, gracefully */
 			encode_mp3_close(encode);
 
+			/* Write out to a log what just happened */
+			loge(LOG_DEBUG2, "ProcessHandler: encode_mp3_data returned less than 0, closing out! fd=%d, %s:%s",
+					s->sock->fd, s->sock->ip_addr_string, s->sock->port_string);
+
 			/* we now exit */
 			task_finish(s);
 		}
@@ -348,14 +372,43 @@ int	SocketPush(pThreads s, unsigned char *data, int size) {
 
 int	PH_SocketPush(pThreads s, unsigned char *data, int size) {
 	int	nr;
+	int	retries;
 
-	sock_nonblock(s->sock);
-	nr = write(s->sock->fd, data, size);
-	sock_block(s->sock);
+	for (retries = 0; retries < 30; retries++) {
+		sock_nonblock(s->sock);
+		nr = write(s->sock->fd, data, size);
+		sock_block(s->sock);
 
-	if (nr < 0 && !WouldBlock(nr)) 
-		return -1;
-	return nr;
+		if (nr < 0 && !WouldBlock(nr)) {
+			return -1;
+		} else if (WouldBlock(nr)) {
+			if (size > 0) {
+				mypause_fd(s->sock->fd, 100);
+				continue;
+			}
+			return -1;
+		} else if (nr > 0 && nr != size) {
+			int	newsize = size - nr;
+
+			/* log that we got a short count, just because, it is fun :) */
+			loge(LOG_DEBUG2, "PH_SocketPush: Received a short count when writing. Wrote %d bytes, but should have been %d bytes, resending others",
+				nr, size); 
+
+			/* move the rest to the front */
+			memmove(data, &data[nr], newsize);
+
+			/* wait up to 100ms, for funzies */
+			mypause_fd(s->sock->fd, 100);
+
+			/* set the size */
+			size = newsize;
+
+			/* and now just continue, it should work :) */
+			continue;
+		}
+		return nr;
+	}
+	return -1;
 }	
 
 /*
@@ -374,7 +427,14 @@ void *GetFromMaster() {
 	MSDiff		diff;
 	CtrlPrimerHeader	primer;
 	int		samplerate = 22050;		/* the "default" sampling rate */
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+	pBytes	init_flashback = bytes_init();
+#endif
 
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+	if (init_flashback)
+		bytes_type_set(init_flashback, BYTES_TYPE_RING);
+#endif
 
 	/* Set the minimum buffer -- to the default (could be over-ridden later) */
 	min_buffer = trans_buf_min(5, 1, samplerate, 2);
@@ -389,6 +449,14 @@ void *GetFromMaster() {
 				cfg_read_key_df("distro_connect_ip", DISTRO_CONNECT_IP), int_cfg_read_key_df("distro_connect_port", DISTRO_CONNECT_PORT));
 
 		if ((m = sock_connect(cfg_read_key_df("distro_connect_ip", DISTRO_CONNECT_IP), int_cfg_read_key_df("distro_connect_port", DISTRO_CONNECT_PORT)))) {
+
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+			MemLock();
+			if (init_flashback && bytes_size(init_flashback) > 0) {
+				bytes_squash(init_flashback, bytes_size(init_flashback));
+			}
+			MemUnlock();
+#endif
 
 			loge(LOG_INFO,
 				"Connection established to master server %s:%d",
@@ -422,7 +490,12 @@ void *GetFromMaster() {
 				/* need to update the minimum buffer and sample rate */
 				samplerate = 44100;
 				min_buffer = trans_buf_min(5, 1, samplerate, 2);
-			} 
+			}
+
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+			if (init_flashback)
+				bytes_maxsize_set(init_flashback, min_buffer);
+#endif
 
 			sock_nonblock(m);
 
@@ -500,12 +573,35 @@ void *GetFromMaster() {
 				if ((mys = bytes_extract(input_buffer, lbuf, appx)) <= 0)
 					continue;
 
-				MemLock();
-				for (scan = AllThreadsHead; scan; scan = scan->next) 
-					if (IsStatusStream(scan) && !IsAdvertising(scan))
-						if (bytes_size(scan->rbuf) < CLIENT_MAX_BUFSIZE)
-							scan->rbuf = bytes_append(scan->rbuf, lbuf, mys);
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+				if (init_flashback) 
+					init_flashback = bytes_append(init_flashback, lbuf, mys);
+#endif
 
+				MemLock();
+				for (scan = AllThreadsHead; scan; scan = scan->next) {
+					if (IsStatusStream(scan) && !IsAdvertising(scan)) {
+#if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
+						if (!scan->flashback) {
+							if (bytes_size(init_flashback) <= 0) {
+								scan->flashback++;  /* screw it */
+							} else {
+								char    tmp[BYTES_MAXSIZE_PER_USER];
+								int	bytes_read;								
+
+								bytes_read = bytes_peek(init_flashback, tmp, min_buffer);
+								if (bytes_read > 0) 
+									scan->rbuf = bytes_append(scan->rbuf, tmp, bytes_read);
+								scan->flashback++;
+								continue;
+							}
+						}
+#endif
+						if (bytes_size(scan->rbuf) < CLIENT_MAX_BUFSIZE) {
+							scan->rbuf = bytes_append(scan->rbuf, lbuf, mys);
+						}
+					}
+				}
 				MemUnlock();
 			}
 		}
