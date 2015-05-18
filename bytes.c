@@ -18,6 +18,59 @@ pBytes	bytes_init(void) {
 }
 
 /*
+ * Write bytes to the FRONT instead of the end. Oh...this doesn't take
+ * into account anything about ring types right now, since it assumes..
+ * if you're doing this: Something bad happened and you need to save stuff.
+ */
+pBytes	bytes_prefix(pBytes in, void *data, int size) {
+	if (size < 0) {
+		loge(LOG_CRITICAL, "bytes_prefix: Returned size of less than 0.  Expected behavior size=%d", size);
+		exit(-1);
+		return in;
+        }
+
+	if (!size)
+		return (in != NULL ? in : NULL);
+	
+	if (in) {
+		pBytes	temp;
+		int	newsize;
+
+#ifdef BYTES_MUTEX
+		bytes_lock(in);
+#endif
+		if (!in->d) {
+#ifdef BYTES_MUTEX
+			bytes_unlock(in);
+#endif
+			return bytes_append(in, data, size);
+		}
+		newsize = size + in->s;
+		if ((temp = realloc(data, newsize))) {
+
+			/* set it to the new data area */
+			in->d = temp;
+
+			/* push the data back! */
+			memmove(&((unsigned char *)in->d)[size], in->d, in->s);
+
+			/* now put the new data up front */
+			memmove(in->d, data, size);
+
+			/* update the size */
+			in->s = newsize;
+
+			/* return in via fall-through */
+		}
+#ifdef BYTES_MUTEX
+		bytes_unlock(in);
+#endif
+		return in;		/* this should be handled MUCH better */
+	}
+	return bytes_append(in, data, size);	/* already written a lot of code to handle this */
+}
+
+/*
  * Adds or "tacks" on new content to an existing Bytes structure.
  */
 pBytes	bytes_append(pBytes in, void *data, int size) {
