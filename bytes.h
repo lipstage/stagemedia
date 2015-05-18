@@ -19,6 +19,7 @@ typedef	struct st_bytes {
 } Bytes, *pBytes;
 
 extern 	pBytes	bytes_init(void);
+extern	pBytes	bytes_prefix(pBytes, void *, int);
 extern	pBytes	bytes_append(pBytes, void *, int);
 extern	int	bytes_peek(pBytes, void *, int);
 extern	int	bytes_squash(pBytes, int);

@@ -12,7 +12,9 @@ int	pcm_data_push(void *, int);
 void	*MasterServer()
 {
 	int	input;
+#ifdef __HYPER_RATE_LIMIT__
 	time_t	purge_timeout = 0;
+#endif
 
 	/* bind to the address and port */
 	input = bind_address(
@@ -35,8 +37,10 @@ void	*MasterServer()
 		/* we have a new connection */
 		if (new) {
 			int begin = !0;
+#ifdef __HYPER_RATE_LIMIT__
 			time_t	last_recv = time(0);
 			unsigned long int	recv_count = 0;
+#endif
 
 			/* Just process forever :-) or until the connection dies */
 			for (;;) {
