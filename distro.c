@@ -153,7 +153,7 @@ void	*ProcessHandler(pThreads s) {
 		char		buffer[8192];	
 
 		/* Send the plain/text header, and, if not, close the socket and stuff */
-		if (http_send_header(s->sock, 200, "text/plain"))
+		if (http_send_header(s->sock, 200, "text/plain", NULL))
 			task_finish(s);
 
 		/* Let it know we are gathering stats */
@@ -196,7 +196,7 @@ void	*ProcessHandler(pThreads s) {
 
 	/* We have too many connections */
 	if (cfg_read_key("max_clients") && atoi(cfg_read_key("max_clients")) <= task_count()) {
-		if (http_send_header(s->sock, 500, NULL)) 
+		if (http_send_header(s->sock, 500, NULL, NULL)) 
 			task_finish(s);
 	}
 
@@ -205,7 +205,7 @@ void	*ProcessHandler(pThreads s) {
 
 		/* Invalid sesion.  The API says "no" to this */
 		if (*sessionid == 0 || (valid_session(sessionid) <= 0)) {
-			http_send_header(s->sock, 403, "text/plain");
+			http_send_header(s->sock, 403, "text/plain", NULL);
 			task_finish(s);
 			loge(LOG_INFO, "Denying connection (fd: %d) from %s:%s due to invalid session",
 				s->sock->fd, s->sock->ip_addr_string, s->sock->port_string);				
@@ -219,8 +219,11 @@ void	*ProcessHandler(pThreads s) {
 		strncpy(s->sessionid, sessionid, sizeof (s->sessionid) - 1);
 	}
 
+	/* Generate an Etag */
+	random_string(s->etag, sizeof s->etag - 1);
+
 	/* Send the HTTP header */
-	if (http_send_header(s->sock, 200, "audio/mpeg"))
+	if (http_send_header(s->sock, 200, "audio/mpeg", s->etag))
 		task_finish(s);		/* exit */
 
 	/* We will now accept the PCM data */

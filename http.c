@@ -114,7 +114,7 @@ int	http_fetch_request(pSocket sock, int *method, char *sessionid) {
 	}
 
 	if (term) {
-		http_send_header(sock, term, NULL);
+		http_send_header(sock, term, NULL, NULL);
 	}
 	return term;
 }
@@ -143,7 +143,7 @@ int	http_filepath(const char *path, char *output, size_t len) {
  * content_type = What "Content-Type" should say to the client.  If this is NULL, it will be
  *	text/plain
  */
-int	http_send_header(pSocket sock, int code, char *content_type) {
+int	http_send_header(pSocket sock, int code, char *content_type, char *etag) {
 	HTTPCode c;
 	char	buffer[65535];
 
@@ -159,8 +159,11 @@ int	http_send_header(pSocket sock, int code, char *content_type) {
 		"Expires: -1\r\n"
 		"Connection: close\r\n"
 		"Content-Type: %s\r\n"
+		"%s%s%s"
 		"\r\n",
-		c.code, c.phrase, HTTP_SERVER_NAME, HTTP_SERVER_VERSION, content_type ? content_type : "text/plain");
+		c.code, c.phrase, HTTP_SERVER_NAME, HTTP_SERVER_VERSION, content_type ? content_type : "text/plain",
+		etag ? "Etag: ": "", etag ? etag : "", etag ? "\r\n" : ""
+	);
 
 	/* write to the socket right now :) */
 	write(sock->fd, buffer, strlen(buffer));

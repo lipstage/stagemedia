@@ -30,8 +30,8 @@ pThreads	new_task(void) {
 	p->next = NULL;
 
 	/* Set the values to NULL and zero */
-	p->wrb.buf = p->rdb.buf = NULL;
-	p->wrb.si = p->rdb.si = 0;
+	//p->wrb.buf = p->rdb.buf = NULL;
+	//p->wrb.si = p->rdb.si = 0;
 #if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
 	p->flashback = 0;
 #endif
