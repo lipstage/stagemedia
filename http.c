@@ -22,7 +22,8 @@ int	http_fetch_request(pSocket sock, int *method, char *sessionid) {
 		while ((p = strchr(buffer, '\n')))
 			*p = '\0';
 
-		//puts(buffer); 
+		/* show what we got in the header */
+		loge(LOG_DEBUG2, "http.headers (fd: %d): >> %s", sock->fd, buffer);
 
 		if (*buffer != '\0' && !term) {
 			/*
@@ -163,6 +164,9 @@ int	http_send_header(pSocket sock, int code, char *content_type) {
 
 	/* write to the socket right now :) */
 	write(sock->fd, buffer, strlen(buffer));
+
+	/* log what we sent to the client */
+	loge(LOG_DEBUG2, "http.headers (fd=%d): << %s", sock->fd, buffer);
 
 	/* If it says close, we clos -- or we say to */
 	if (c.clos) {
