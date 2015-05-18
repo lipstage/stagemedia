@@ -23,7 +23,7 @@ int	http_fetch_request(pSocket sock, int *method, char *sessionid) {
 			*p = '\0';
 
 		/* show what we got in the header */
-		loge(LOG_DEBUG2, "http.headers (fd: %d): >> %s", sock->fd, buffer);
+		loge(LOG_DEBUG2, "http.headers (fd=%d): >> %s", sock->fd, buffer);
 
 		if (*buffer != '\0' && !term) {
 			/*
