@@ -36,7 +36,7 @@ typedef struct st_Request {
 } HTTPRequest;
 
 extern	HTTPCode	http_code_get(int);
-extern	int		http_send_header(pSocket, int, char *);
+extern	int		http_send_header(pSocket, int, char *, char *);
 extern	int		http_fetch_request(pSocket, int *, char *);
 extern	int		http_filepath(const char *, char *, size_t);
 

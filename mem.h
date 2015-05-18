@@ -35,14 +35,14 @@
 typedef struct	st_Threads {
 	pSocket		sock;
 	pthread_t	handler;
-	struct {
-		void	*buf;
-		size_t	si;
-	} rdb;
-	struct	{
-		void	*buf;
-		size_t	si;
-	} wrb;
+//	struct {
+//		void	*buf;
+//		size_t	si;
+//	} rdb;
+//	struct	{
+//		void	*buf;
+//		size_t	si;
+//	} wrb;
 
 	pBytes	rbuf;
 
@@ -56,6 +56,7 @@ typedef struct	st_Threads {
 	time_t		connect_epoch;		/* the time the socket was connected or, to be specific, when the task was created */
 	int		ad_inject;
 
+	char	etag[64];
 	char	sessionid[256];
 #if defined(INIT_BURST_FLASHBACK) && defined(INIT_BURST_ON_CONNECT)
 	int	flashback;
