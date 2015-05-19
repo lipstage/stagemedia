@@ -145,12 +145,24 @@ int	http_filepath(const char *path, char *output, size_t len) {
  */
 int	http_send_header(pSocket sock, int code, char *content_type, char *etag) {
 	HTTPCode c;
-	char	buffer[65535];
+//	char	buffer[65535];
 
 	c = http_code_get(code);
 	if (c.phrase == NULL)
 		c = http_code_get(500);
-	
+
+	wheader(sock, "HTTP/1.1 %d %s\r\n", c.code, c.phrase);
+	wheader(sock, "Server: %s/%s\r\n", HTTP_SERVER_NAME, HTTP_SERVER_VERSION);
+	wheader(sock, "Content-Type: %s\r\n", content_type ? content_type : "text/plain");
+	wheader(sock, "Cache-Control: no-cache, must-revalidate\r\n");
+	wheader(sock, "Pragma: no-cache\r\n");
+	wheader(sock, "Expires: -1\r\n");
+	if (etag)
+		wheader(sock, "ETag: \"%s\"\r\n", etag);		
+
+
+	wheader(sock, "Connection: close\r\n");
+/*
 	snprintf(buffer, sizeof buffer - 1, 
 		"HTTP/1.1 %d %s\r\n"
 		"Server: %s/%s\r\n"
@@ -164,12 +176,16 @@ int	http_send_header(pSocket sock, int code, char *content_type, char *etag) {
 		c.code, c.phrase, HTTP_SERVER_NAME, HTTP_SERVER_VERSION, content_type ? content_type : "text/plain",
 		etag ? "Etag: ": "", etag ? etag : "", etag ? "\r\n" : ""
 	);
+*/
 
 	/* write to the socket right now :) */
-	write(sock->fd, buffer, strlen(buffer));
+//	write(sock->fd, buffer, strlen(buffer));
 
 	/* log what we sent to the client */
-	loge(LOG_DEBUG2, "http.headers (fd=%d): << %s", sock->fd, buffer);
+//	loge(LOG_DEBUG2, "http.headers (fd=%d): << %s", sock->fd, buffer);
+
+	/* write very last part */
+	wheader(sock, "\r\n");
 
 	/* If it says close, we clos -- or we say to */
 	if (c.clos) {
@@ -197,3 +213,15 @@ HTTPCode http_code_get(int code) {
 	return data[i];
 }
 
+int	wheader(pSocket sock, const char *fmt, ...) {
+	char	buffer[4096];
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vsnprintf(buffer, sizeof buffer, fmt, ap);
+	va_end(ap);
+
+	loge(LOG_DEBUG2, "http.headers (fd=%d): << %s", sock->fd, buffer);
+
+	return write(sock->fd, buffer, strlen(buffer));
+}
