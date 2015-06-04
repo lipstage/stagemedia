@@ -5,6 +5,12 @@ pConfig TmpConfigHead = NULL;
 pConfig SuperConfigHead = NULL;
 static	int	version = 1;
 
+static  pthread_mutex_t cfg_mutex = PTHREAD_MUTEX_INITIALIZER;
+static  pthread_mutex_t pre_cfg_mutex = PTHREAD_MUTEX_INITIALIZER;
+static	int             is_cfg_locked;
+static 	pthread_t       cfg_current_lock = -1;
+static	int	cfg_lock(void),	cfg_unlock(void);
+
 /*
  * Reads the file and loads the user-defined configuration
  */
@@ -37,8 +43,8 @@ int	read_config(const char *filename, int isboot) {
 		}
 	}
 
-	/* Lock memory for reload and all */
-	MemLock();
+	/* Get a global lock */
+	cfg_lock();
 
 	while (fgets(buffer, sizeof buffer, fp)) {
 		char *p, *tmp;
@@ -102,7 +108,7 @@ int	read_config(const char *filename, int isboot) {
 				purge_config(&TmpConfigHead);
 
 				/* Unlock memory */
-				MemUnlock();
+				cfg_unlock();
 
 				return -1;
 			}
@@ -126,7 +132,7 @@ int	read_config(const char *filename, int isboot) {
 				purge_config(&TmpConfigHead);
 
 				/* Unlock memory */
-				MemUnlock();
+				cfg_unlock();
 
 				return -1;
 			}
@@ -158,7 +164,7 @@ int	read_config(const char *filename, int isboot) {
 	}
 
 	/* unlock memory */
-	MemUnlock();
+	cfg_unlock();
 
 	fclose(fp);
 
@@ -257,22 +263,23 @@ void	purge_config(pConfig *head) {
 const char * cfg_read_key(const char *key) {
 	pConfig scan;
 
-	MemLock();
+	cfg_lock();
 
 	/* scan the superhead first, it takes priority */
 	for (scan = SuperConfigHead; scan; scan = scan->next)
 		if (!strcasecmp(scan->key, key)) {
-			MemUnlock();
+			cfg_unlock();
 			return scan->value;
 		}
 
 	/* scan the default from the configuration -- it takes second priority */
 	for (scan = ConfigHead; scan; scan = scan->next)
 		if (!strcasecmp(scan->key, key)) {
-			MemUnlock();
+			cfg_unlock();
 			return scan->value;
 		}
-	MemUnlock();
+
+	cfg_unlock();
 	return NULL;
 }
 
@@ -283,13 +290,13 @@ const char * cfg_read_key(const char *key) {
 const char * cfg_read_superhead_key(const char *key) {
 	pConfig	scan;
 	
-	MemLock();
+	cfg_lock();
 	for (scan = SuperConfigHead; scan; scan = scan->next) 
 		if (!strcasecmp(scan->key, key)) {
-			MemUnlock();
+			cfg_unlock();
 			return scan->value;
 		}
-	MemUnlock();
+	cfg_unlock();
 	return NULL;
 }
 
@@ -314,8 +321,7 @@ int	cfg_lines(void) {
 void	cfg_dump(void) {
 	pConfig scan;
 
-	MemLock();
-
+	cfg_lock();
 	debug2("--- Dumping all configuration options");
 
 	for (scan = SuperConfigHead; scan; scan = scan->next)
@@ -326,7 +332,7 @@ void	cfg_dump(void) {
 
 	debug2("--- End of configuration dump");
 
-	MemUnlock();
+	cfg_unlock();
 }
 
 /*
@@ -424,5 +430,34 @@ int	pid_file(int toopen) {
 	}
 
 	debug2("Leaving function pid_file and returning");
+	return 0;
+}
+
+
+
+/*
+ */
+
+static	int	cfg_lock(void) {
+	/* Get a "pre" lock -- this prevents deadlock situations */
+	pthread_mutex_lock(&pre_cfg_mutex);
+
+	if (is_cfg_locked > 0 && cfg_current_lock == pthread_self()) {
+		pthread_mutex_unlock(&pre_cfg_mutex);
+		return 0;
+	}
+
+	pthread_mutex_lock(&cfg_mutex);
+	cfg_current_lock = pthread_self();
+	is_cfg_locked++;
+	pthread_mutex_unlock(&pre_cfg_mutex);
+
+	return 0;
+}
+
+static	int	cfg_unlock(void) {
+	cfg_current_lock = -1;
+	is_cfg_locked = 0;
+	pthread_mutex_unlock(&cfg_mutex);
 	return 0;
 }

@@ -34,7 +34,8 @@
  *
  * BE CAREFUL WITH THIS SETTING. TOO LOW AND THE USER MAY NOT STREAM ANYTHING AT ALL.
  */
-#define	BYTES_MAXSIZE_PER_USER	(1024*768)
+/* #define	BYTES_MAXSIZE_PER_USER	(1024*768) */
+#define	BYTES_MAXSIZE_PER_USER	CLIENT_MAX_BUFSIZE
 
 
 /*
@@ -66,7 +67,9 @@
  * The maximum one part of the buffer that will be transcoded at a time.
  * This keeps calls to calloc() which request larger sums of memory low
  */
-#define	MAX_TRANSCODE_CLIP_SIZE		1024*64
+/* #define	MAX_TRANSCODE_CLIP_SIZE		1024*64*4 */
+#define		MAX_TRANSCODE_CLIP_SIZE		1024*64
+
 
 /*
  * If you enable this, it will use calloc()/malloc() to create a reserve
@@ -77,7 +80,7 @@
  *
  * Consider this deprecated.
  */
-#undef	ALLOCATE_AUDIO_ENCODING_BUFFER
+/* #undef	ALLOCATE_AUDIO_ENCODING_BUFFER */
 
 /*
  * The default configuration file we're going to load
@@ -143,5 +146,32 @@
  */
 #define	DEFAULT_QUALITY	"acceptable"
 
+/*
+ * The maximum time (in seconds) the server will allow encoding
+ * to occur, without any serving of content. This is useful if
+ * a user has since disconnected and there is nothing remaining
+ * to serve. We don't really know that they're gone if they're
+ * using byte serving, so this is really the only way.
+ */
+#define	MAX_ASYNC_ENCODE_TIME		30
+
+/*
+ * SUPPORT_DEBUG3
+ * 
+ * DEBUG3 is used for EXTREMELY verbose operations, including locking.
+ * This should absolutely not be enabled in production. In fact, you 
+ * HAVE to recompile to provide support for debug3 :)
+ */
+#undef	SUPPORT_DEBUG3
+#undef	CONSOLE_DEBUGGING
+
+/*
+ * The new method is for the mp3 encoder to pass multiple PCM frames
+ * to lame in one go. Ideally, this should reduce CPU costs slightly
+ * However, it is possible that bugs may exist in this code. If you 
+ * turn this back on, it will only send 1 sample per call versus, well,
+ * a lot more :-)
+ */
+#undef MP3_ENCODER_SINGLE_SHORT
 
 #endif

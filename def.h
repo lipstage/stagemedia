@@ -34,4 +34,6 @@
  */
 #define INIT_BURST_FLASHBACK
 
+#define	IDENTITY_STRLEN		63
+
 #endif /* __DEF_H__ */

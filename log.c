@@ -61,6 +61,12 @@ void	loge(int level, const char *fmt, ...) {
 	if (!logfp)
 		return;
 
+#ifndef	SUPPORT_DEBUG3
+	/* Ignore DEBUG3 unless compiled in */
+	if (level == LOG_DEBUG3)
+		return;
+#endif
+
 	/*
 	 * Create the specified line item entry
 	 */
@@ -86,6 +92,7 @@ void	loge(int level, const char *fmt, ...) {
 	if (!(log_level_name(lname, sizeof lname - 1, level)))
 		strcpy(lname, "base");
 
+
 	/*
 	 * Check whether or not we want to even log this message
 	 */
@@ -109,6 +116,11 @@ void	loge(int level, const char *fmt, ...) {
 	 * Write out the log entry
 	 */
 	fprintf(logfp, "%s\n", buffer);
+
+	/*
+	 * This can be expensive, but useful 
+	 */
+	fflush(logfp);
 }
 
 char *log_level_name(char *n, int ns, int level) {
@@ -118,6 +130,9 @@ char *log_level_name(char *n, int ns, int level) {
 			break;
 		case LOG_DEBUG2:
 			strncpy(n, "debug2", ns);
+			break;
+		case LOG_DEBUG3:
+			strncpy(n, "debug3", ns);
 			break;
 		case LOG_INFO:
 			strncpy(n, "info", ns);
@@ -158,7 +173,7 @@ int	log_should(const char *name) {
 		const char *p = cfg_read_key("log_levels");
 
 		/* be atomic */
-		atomic();
+		//MemLock();
 	
 		/* Set all fields to NULL */
 		for (i = 0; i < (sizeof(field) / sizeof(*field)); i++)
@@ -169,7 +184,7 @@ int	log_should(const char *name) {
 
 		/* No config for that?  no problem */
 		if (!p) {
-			noatomic();
+			//MemUnlock();
 			return 1;
 		}
 
@@ -187,7 +202,7 @@ int	log_should(const char *name) {
 		config_version = cur_version;
 
 		/* No need now */
-		noatomic();
+		//MemUnlock();
 	}
 
 	if (field[0]) {

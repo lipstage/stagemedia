@@ -49,7 +49,7 @@ pSocket	sock_accept(int fd) {
 	struct sockaddr_in	addr;
 
 	/* Wait up to 1 second for a change in the socket (maybe a connection!) */
-	if ((mypause_fd(fd, 1000)) <= 0)
+	if ((mypause_read_fd(fd, 1000)) <= 0)
 		return NULL;
 
 	/*
@@ -271,6 +271,9 @@ int sock_read(pSocket s, int maxsize, void *data) {
  * sock_close - Time to close the socket
  */
 void sock_close(pSocket s) {
+	/* Record what we got */
+	loge(LOG_DEBUG2, "sock_close: function called with address of ``s'' at %p", s);
+
 	/* we received nothing */
 	if (!s)
 		return;
@@ -357,7 +360,7 @@ int	sock_readline(char *buffer, size_t len, pSocket s) {
 		 */
 		if (WouldBlock(ret)) {
 			/* pause/wait on the socket for 500ms */
-			mypause_fd(s->fd, 500);
+			mypause_read_fd(s->fd, 500);
 
 			/* start over */
 			continue; 

@@ -25,9 +25,11 @@ extern	int	bytes_peek(pBytes, void *, int);
 extern	int	bytes_squash(pBytes, int);
 extern	void	bytes_free(pBytes);
 extern	int	bytes_size(pBytes);
+extern	pBytes	bytes_copy(pBytes, pBytes, int);
 extern	int	bytes_extract(pBytes, void *, int);
 extern	void	*bytes_data(pBytes);
 extern	int	bytes_ready(pBytes);
+extern	void	bytes_purge(pBytes);
 
 
 extern	void	bytes_type_set(pBytes, int );

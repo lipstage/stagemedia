@@ -12,25 +12,36 @@ void    mypause_time(int ms) {
 	select(1, NULL, NULL, NULL, &tv);
 }
 
-int	mypause_fd(int fd, int ms) {
+int	mypause_fd(int fd, int ms, int towrite) {
 	int	retval;
-	fd_set  rdfs;
+	fd_set  dset;
 	struct  timeval tv;
 
         /*
 	 * Let's wait for 250ms for a possible connection
          */
-	FD_ZERO(&rdfs);
-        FD_SET(fd, &rdfs);
+	FD_ZERO(&dset);
+        FD_SET(fd, &dset);
         tv.tv_sec = 0;
         tv.tv_usec = ms * 1000;
 
         /*
 	 * Test for data availability.  Return NULL if nothing
          */
-	retval = select(fd+1, &rdfs, NULL, NULL, &tv);
+	if (towrite)
+		retval = select(fd+1, NULL, &dset, NULL, &tv);
+	else
+		retval = select(fd+1, &dset, NULL, NULL, &tv);
 	
 	return retval;
+}
+
+int	mypause_read_fd(int fd, int ms) {
+	return mypause_fd(fd, ms, 0);
+}
+
+int	mypause_write_fd(int fd, int ms) {
+	return mypause_fd(fd, ms, 1);
 }
 
 /*
@@ -74,8 +85,10 @@ char *trim(char *s) {
  
 	len = strlen(s);
 	p = s;
-	while (*p && isspace(*p)) 
+	while (*p && isspace(*p)) {
 		memmove(s, (p + 1), --len);
+		s[strlen(s)-1] = 0;
+	}
 	
 	for (p = s + strlen(p) -1; *s && isspace(*p); --p) 
 		*p = '\0';
@@ -102,4 +115,17 @@ char *random_string(char *str, int s) {
 		str[iter+1] = '\0';
 	}
 	return str;
+}
+
+char	*remove_chars(char *s, char c) {
+	char	*p = s;
+	
+	while (p && *p) {
+		if (*p == c) {
+			memmove(p, p + 1, strlen(p));
+			continue;
+		}
+		++p;
+	}
+	return p;
 }

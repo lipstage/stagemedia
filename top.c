@@ -82,8 +82,10 @@ int	main(int argc, char **argv) {
 	/* try to start up the log */
 	log_init();
 
+#ifndef	CONSOLE_DEBUGGING
 	if (fork())
 		exit(0);
+#endif
 
 	/* dump config */
 	cfg_dump();
@@ -142,8 +144,6 @@ int	main(int argc, char **argv) {
 			 */
 			connections = task_count();
 
-			MemLock();
-
 			/*
 			 * Attempt to create a new task -- if it fails, run this.
 			 */
@@ -154,21 +154,16 @@ int	main(int argc, char **argv) {
 				/* close the socket -- not much more we can do :( */
 				sock_close(s);
 
-				/* Unlock the memory */
-				MemUnlock();
-
 				/* Restart our loop again */
 				continue;
 			}
 
-			MemUnlock();
-
 			/* set it to the socket */
                         nt->sock = s;
 
-			if (!MASTER)
+			if (!MASTER) {
 				ret = pthread_create(&nt->handler, NULL, ProcessHandler, (void *)nt);
-			else {
+			} else {
 				/*
 				 * We cannot go over the maximum allowed connections
 				 */
@@ -199,7 +194,7 @@ int	main(int argc, char **argv) {
 	}
 	
 
-	printf("%d\n", serverfd);
+	//printf("%d\n", serverfd);
 	
 	return 0;
 }
@@ -227,7 +222,7 @@ void	*DistHandler(pThreads s) {
 	sock_nonblock(s->sock);
 
 	for (;;) {
-		MemLock();
+		MEMLOCK(1);
 
 		/*
 		 * Test if we have something in our buffer.  If we don't, 
@@ -235,7 +230,7 @@ void	*DistHandler(pThreads s) {
 		 */
 		if (bytes_size(s->rbuf) <= 0) {
 			/* Don't keep the lock */
-			MemUnlock();
+			MEMUNLOCK(1);
 
 			/* Wait 250ms and expect additional data */
 			mypause_time(250);
@@ -269,10 +264,10 @@ void	*DistHandler(pThreads s) {
 			 */
 			if ((errno == EAGAIN || errno == EWOULDBLOCK) && bytes_size(s->rbuf) < DISTRO_MAX_SIZE) {
 				/* Remove the lock */
-				MemUnlock();
+				MEMUNLOCK(1);
 		
 				/* Wait up to 500ms for the socket to become "ready" */
-				mypause_fd(s->sock->fd, 500);
+				mypause_read_fd(s->sock->fd, 500);
 
 				/* restart the loop */
 				continue;
@@ -291,7 +286,7 @@ void	*DistHandler(pThreads s) {
 				SetStatus_Dead(s);
 			
 				/* Unlock memory */
-				MemUnlock();
+				MEMUNLOCK(1);
 
 				/* ...And, we're done */
 				break;
@@ -300,7 +295,7 @@ void	*DistHandler(pThreads s) {
 		}
 
 		/* Unlock the memory stuff */
-		MemUnlock();
+		MEMUNLOCK(1);
 	}
 	pthread_exit(&n);
 	return NULL;

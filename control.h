@@ -13,6 +13,7 @@
 /*
 #define	QualityAcceptable(options)	(((options >> 2) & 0xf) == QUALITY_ACCEPTABLE)
 #define	QualityGood(options)		(((options >> 2) & 0xf) == QUALITY_GOOD)
+#define	QualityVeryGood(options)	(((options >> 2) & 0xf) == QUALITY_VERYGOOD)
 */
 
 

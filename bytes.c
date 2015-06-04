@@ -232,6 +232,21 @@ int	bytes_peek(pBytes in, void *buffer, int s) {
 }
 
 /*
+ * Transfer all bytes from 'src' to 'dest'
+ *
+ * Does NOT erase src :)
+ */
+pBytes	bytes_copy(pBytes dest, pBytes src, int maxsize) {
+	if (!dest || !src || !src->d)
+		return (dest);
+	if (maxsize <= 0)
+		maxsize = src->s;
+	if (src->s > 0)
+		return bytes_append(dest, src->d, (src->s < maxsize ? src->s : maxsize));
+	return (dest);
+}
+
+/*
  * Just pull of ``s'' size of bytes from the beginning of the data
  * stream and remove the extra
  */
@@ -338,6 +353,14 @@ void	bytes_free(pBytes in) {
 		phthread_mutex_destroy(&new->lock);
 #endif
 		free(in);
+	}
+}
+
+void	bytes_purge(pBytes in) {
+	if (in && in->d) {
+		free (in->d);
+		in->d = NULL;
+		in->s = 0;
 	}
 }
 

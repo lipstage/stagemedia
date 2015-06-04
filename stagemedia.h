@@ -44,8 +44,27 @@
 # include "encoder_mp3.h"
 #endif
 
-#ifndef	__SLINGMEDIA_H__
-#define __SLINGMEDIA_H__
+#ifndef	__STAGEMEDIA_H__
+#define __STAGEMEDIA_H__
+
+#ifdef	CONSOLE_DEBUGGING
+# define MemLock()		MemLock_Assert( (char *) __FUNCTION__, __LINE__)
+# define	MEMLOCK(counter)	MemLock_Assert( (char *) __FUNCTION__, __LINE__)
+# define	MEMUNLOCK(counter)	MemUnlock()
+#else
+# define MEMLOCK(count)		MemLock()
+# define MEMUNLOCK(count)	MemUnlock()
+#endif
+
+/*
+#define	_OMEMLOCK(counter)	{ loge(LOG_DEBUG3, "%s: Getting global lock (%d)", __FUNCTION__, counter); \
+	MemLock_Assert(__FUNCTION__, __LINE__);  \
+	loge(LOG_DEBUG3, "%s: Got global lock (%d)", __FUNCTION__, counter); }
+
+#define MEMUNLOCK(counter)       { loge(LOG_DEBUG3, "%s: Removing global lock (%d)", __FUNCTION__, counter); \
+	MemUnlock(); \
+	loge(LOG_DEBUG3, "%s: Removed global lock (%d)", __FUNCTION__, counter); }
+*/
 
 /*
  * Socket Header Information
@@ -146,7 +165,9 @@ extern	int	au_head_ok(const unsigned char *);
 
 extern  void	mypause();
 extern	void	mypause_time();
-extern	int	mypause_fd(int, int);
+extern	int	mypause_fd(int, int, int),
+		mypause_write_fd(int, int),
+		mypause_read_fd(int, int);
 
 extern	char	*strlower(char *);
 extern	char	*strupper(char *);
@@ -155,4 +176,8 @@ extern	char	*trim(char *);
 
 extern	char	*random_string(char *, int);
 
-#endif /* __SLINGMEDIA_H__ */
+extern	char	*remove_chars(char *, char);
+
+#endif /* __STAGEMEDIA_H__ */
+
+

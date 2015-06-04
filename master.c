@@ -48,7 +48,7 @@ void	*MasterServer()
 				int	si;
 
 				/* wait up to 500ms for new data to arrive */
-				mypause_fd(new->fd, 500);
+				mypause_read_fd(new->fd, 500);
 
 				/* attempt to read the data from the socket */
 				si = sock_read(new, sizeof data, data);
@@ -130,15 +130,15 @@ void	*MasterServer()
 int	pcm_data_push(void *data, int length) {
 	pThreads	scan;
 
-	MemLock();
-	
+	MEMLOCK(1);	
+
 	for (scan = AllThreadsHead; scan; scan = scan->next) {
 		if (!IsStatusStream(scan))
 			continue;
 		scan->rbuf = bytes_append(scan->rbuf, data, length);
 	}
 	
-	MemUnlock();
+	MEMUNLOCK(1);
 
 	return 0;
 }
@@ -172,6 +172,10 @@ int	au_head_ok(const unsigned char *p) {
 		if (!strcasecmp(quality, "good")) {
 			if (au.channels == 1 && au.encoding == 3 && au.sample_rate == 44100)
 				return 1;
+		} else if(!strcasecmp(quality, "verygood")) {
+			if (au.channels == 2 && au.encoding == 3 && au.sample_rate == 44100)
+				return 1; 
+		
 		} else {
 			if (au.channels == 1 && au.encoding == 3 && au.sample_rate == 22050)
 				return 1;
