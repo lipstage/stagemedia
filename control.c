@@ -41,6 +41,8 @@ int	Ctrl_Primer(unsigned short int id, char *buffer, size_t s, const char *serve
 	quality = cfg_read_key_df("quality", DEFAULT_QUALITY);
 	if (!strcasecmp(quality, "good")) 
 		options |= (QUALITY_GOOD << 2);
+	else if(!strcasecmp(quality, "verygood"))
+		options |= (QUALITY_VERYGOOD << 2);
 	else /* acceptable */
 		options |= (QUALITY_ACCEPTABLE << 2);
 
